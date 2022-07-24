@@ -9,7 +9,6 @@ import traceback
 
 
 start_time = time.time()
-last_checkpoint = start_time
 TIME_WAIT_AFTER_GET = 1/2
 TIME_WAIT_AFTER_HEAD = 1/10
 
@@ -328,8 +327,21 @@ def get_jolly_and_purify_ID(ID):
     else:
         return "".join(ID.split("*")), 0
 
+def get_timedelta_from_chadsoft(time):
+    mins = int(time.split(':')[0])
+    secs = int(time.split(':')[1].split('.')[0])
+    ms = int(time.split(':')[1].split('.')[1])
+    return datetime.timedelta(minutes=mins, seconds=secs, milliseconds=ms)
+
+def get_gs_time_from_timedelta(time):
+    time = str(time).split(':')[1:]
+    if len(time[1]) == 2:
+        time[1] += ".000"
+        return time[0] + ':' + time[1]
+    else:
+        return time[0] + ':' + time[1][:-3]
+
 def main():
-    global last_checkpoint
     global wks
     full_gs = wks.get_values(value_render_option="FORMULA")
     IDs = [i[1] for i in full_gs[2:]]
@@ -338,7 +350,7 @@ def main():
     from_last_gs_update = 0
     for ID, LM in zip(IDs, LMs):
         row += 1
-        if ID == "noID":
+        if ID == "noID" or ID == "":
             print(f"[PLAYER SKIPPED AT ROW {row}]")
             continue
         ID, jolly = get_jolly_and_purify_ID(ID)
@@ -348,6 +360,7 @@ def main():
         cd_LM = cd_get_last_modified(ID)
         if LM != "" and datetime.datetime.fromisoformat(LM) > cd_LM:
             continue
+
         print("  [OUTDATED DATA FOUND] fetching player JSON from Chadsoft...")
         from_last_gs_update += 1
         player_data = json.loads(get_chadsoftAPI_request(ID))
@@ -357,7 +370,6 @@ def main():
             if g["200cc"] == True or g["trackId"] not in list(RT_CATEGORIES.keys()):
                 continue
             trackId = g["trackId"]
-            new_time = g["finishTimeSimple"]
             try:
                 categoryId = g["categoryId"]
             except:
@@ -366,31 +378,20 @@ def main():
             if gs_track_column == "INVALID_TRACK_CATEGORY":
                 print("  [SKIPPING INVALID TRACK CATEGORY]", g["trackName"] + "; category:", get_category(categoryId))
                 continue
+
+            new_time = g["finishTimeSimple"]
+            new_time = get_timedelta_from_chadsoft(new_time)
             try:
                 old_time = gs_row_values[gs_track_column]
-            except IndexError:
-                old_time = ""
-            new_min = int(new_time.split(':')[0])
-            new_sec = int(new_time.split(':')[1].split('.')[0])
-            new_ms = int(new_time.split(':')[1].split('.')[1])
-            new_time = datetime.timedelta(minutes=new_min, seconds=new_sec, milliseconds=new_ms)
-            try:
-                old_min = int(old_time.split(':')[0])
-                old_sec = int(old_time.split(':')[1].split('.')[0])
-                old_ms = int(old_time.split(':')[1].split('.')[1])
-                old_time = datetime.timedelta(minutes=old_min, seconds=old_sec, milliseconds=old_ms)
+                old_time = get_timedelta_from_chadsoft(old_time)
             except:
                 old_time = datetime.timedelta()
                 
             if not (old_time == datetime.timedelta() or (full_gs[row+jolly][gs_track_column+3] == "TBA" and new_time <= old_time) or (full_gs[row+jolly][gs_track_column+3] != "TBA" and new_time < old_time)):
                 continue
 
-            new_time = str(new_time).split(':')[1:]
-            if len(new_time[1]) == 2:
-                new_time[1] += ".000"
-                new_time = new_time[0] + ':' + new_time[1]
-            else:
-                new_time = new_time[0] + ':' + new_time[1][:-3]
+            new_time = get_gs_time_from_timedelta(new_time)
+            
             print("  (NEW GHOSTS FOUND)", g["trackName"] + "; category:", get_category(categoryId) + "; time:", new_time)
             # Modify the values in the full_gs to the ones of the GHOST
             full_gs[row+jolly][gs_track_column-1] = "=IMAGE(\"" + get_ghost_mii(g["href"]) + "\")" # Mii image link, taken from chadsoft, mettere formula =IMAGE([link])
