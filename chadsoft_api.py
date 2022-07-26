@@ -7,13 +7,12 @@ import traceback
 
 # Google Sheet : https://docs.google.com/spreadsheets/d/19qNyxZstZ2htq48dLRoupDBu74ZJOFw66vb8RXhN6XE/edit#gid=58+3825868
 
-
 start_time = time.time()
 TIME_WAIT_AFTER_GET = 1/2
 TIME_WAIT_AFTER_HEAD = 1/10
 
-GS_START_INDEX = 10
-GS_TRACKS_INTERVAL = 8
+GS_START_INDEX = 14
+GS_TRACKS_INTERVAL = 9
 NUM_ROWS_PARTIAL_UPDATE = 5
 
 ### Values meaning ###
@@ -294,7 +293,7 @@ def get_controller(ID):
     else: 
         return ""
 
-def get_gs_track_index(ID, categoryId):
+def get_gs_track_column(ID, categoryId):
     base = 0
     pos = list(RT_CATEGORIES.keys()).index(ID)
     if (categoryId == 2 or categoryId == 16) and 18 in RT_CATEGORIES[ID]:
@@ -327,25 +326,36 @@ def get_jolly_and_purify_ID(ID):
     else:
         return "".join(ID.split("*")), 0
 
-def get_timedelta_from_chadsoft(time):
+def get_timedelta_from_string(time):
+    if "°" in time: time = time[:-1]
     mins = int(time.split(':')[0])
     secs = int(time.split(':')[1].split('.')[0])
     ms = int(time.split(':')[1].split('.')[1])
     return datetime.timedelta(minutes=mins, seconds=secs, milliseconds=ms)
 
-def get_gs_time_from_timedelta(time):
+def get_gs_time_from_timedelta(time, original=True):
     time = str(time).split(':')[1:]
+    jolly = ""
+    if original: jolly = "°"
     if len(time[1]) == 2:
         time[1] += ".000"
-        return time[0] + ':' + time[1]
+        return time[0] + ':' + time[1] + jolly
     else:
-        return time[0] + ':' + time[1][:-3]
+        return time[0] + ':' + time[1][:-3] + jolly
+
+def get_value_safely(sheet, row, column):
+    try:
+        value = sheet[row][column]
+    except:
+        value = ""
+    finally:
+        return value
 
 def main():
     global wks
     full_gs = wks.get_values(value_render_option="FORMULA")
-    IDs = [i[1] for i in full_gs[2:]]
-    LMs = [i[2] for i in full_gs[2:]]
+    IDs = [i[5] for i in full_gs[2:]]
+    LMs = [i[6] for i in full_gs[2:]]
     row = 1 #Current row
     from_last_gs_update = 0
     for ID, LM in zip(IDs, LMs):
@@ -374,34 +384,51 @@ def main():
                 categoryId = g["categoryId"]
             except:
                 categoryId = -1
-            gs_track_column = get_gs_track_index(trackId, categoryId)
+            gs_track_column = get_gs_track_column(trackId, categoryId)
             if gs_track_column == "INVALID_TRACK_CATEGORY":
                 print("  [SKIPPING INVALID TRACK CATEGORY]", g["trackName"] + "; category:", get_category(categoryId))
                 continue
 
             new_time = g["finishTimeSimple"]
-            new_time = get_timedelta_from_chadsoft(new_time)
+            new_time = get_timedelta_from_string(new_time)
             try:
                 old_time = gs_row_values[gs_track_column]
-                old_time = get_timedelta_from_chadsoft(old_time)
+                old_time = get_timedelta_from_string(old_time)
             except:
                 old_time = datetime.timedelta()
                 
-            if not (old_time == datetime.timedelta() or (full_gs[row+jolly][gs_track_column+3] == "TBA" and new_time <= old_time) or (full_gs[row+jolly][gs_track_column+3] != "TBA" and new_time < old_time)):
+            if not (old_time == datetime.timedelta() 
+                or (full_gs[row+jolly][gs_track_column+3] == "TBA" and new_time <= old_time) 
+                or (full_gs[row+jolly][gs_track_column+3] != "TBA" and new_time < old_time)):
                 continue
 
-            new_time = get_gs_time_from_timedelta(new_time)
-            
+            # if RT_CATEGORIES[trackId].index(categoryId) == 1:
+            #     before_time = datetime.timedelta()
+            #     try:
+            #         before_time = gs_row_values[get_gs_track_column(trackId, RT_CATEGORIES[trackId][0])]
+            #         if "°" in before_time: before_time = before_time[:-1]
+            #         before_time = get_timedelta_from_chadsoft(before_time)
+            #     except:
+            #         before_time = datetime.timedelta()
+            #     if before_time != datetime.timedelta() and before_time < new_time:
+            #         new_time = get_gs_time_from_timedelta(before_time, original=False)
+            #     else:
+            #         new_time = get_gs_time_from_timedelta(new_time)
+
+
+            new_time = get_gs_time_from_timedelta(new_time, categoryId not in [-1, 0, 2])
+
             print("  (NEW GHOSTS FOUND)", g["trackName"] + "; category:", get_category(categoryId) + "; time:", new_time)
             # Modify the values in the full_gs to the ones of the GHOST
             full_gs[row+jolly][gs_track_column-1] = "=IMAGE(\"" + get_ghost_mii(g["href"]) + "\")" # Mii image link, taken from chadsoft, mettere formula =IMAGE([link])
-            full_gs[row+jolly][gs_track_column] = str(new_time)
-            full_gs[row+jolly][gs_track_column+1] = g["dateSet"][:-1]
-            full_gs[row+jolly][gs_track_column+2] = get_flap(ID, trackId, categoryId)
+            full_gs[row+jolly][gs_track_column] = new_time
+            full_gs[row+jolly][gs_track_column+1] = g["dateSet"][:10]
             full_gs[row+jolly][gs_track_column+3] = "=HYPERLINK(\"" + get_ghost_link(g["href"]) + "\"; \"Sì\")" # Ghost info, taken from chadsoft, mettere
-            full_gs[row+jolly][gs_track_column+4] = get_vehicle(g["vehicleId"])
-            full_gs[row+jolly][gs_track_column+5] = get_driver(g["driverId"])
-            full_gs[row+jolly][gs_track_column+6] = get_controller(g["controller"])
+            full_gs[row+jolly][gs_track_column+5] = get_vehicle(g["vehicleId"])
+            full_gs[row+jolly][gs_track_column+6] = get_driver(g["driverId"])
+            full_gs[row+jolly][gs_track_column+7] = get_controller(g["controller"])
+
+
 
         shifted_LM = cd_LM + datetime.timedelta(minutes=20)
         full_gs[row][2] = shifted_LM.isoformat()
@@ -412,6 +439,47 @@ def main():
             full_gs = wks.get_values(value_render_option="FORMULA")
             print(f"[SUCCESSFUL] UPDATED {NUM_ROWS_PARTIAL_UPDATE} ROWS OF GOOGLE SHEETS, PROCEEDING WITH THE NEXT BLOCK...")
 
+    wks.update(full_gs, value_input_option="USER_ENTERED")
+    full_gs = wks.get_values(value_render_option="FORMULA")
+
+    # After everything, check the unresctricted
+    names = [i[0] for i in full_gs[2:]]
+    row = 1
+    for name in names:
+        row += 1
+        current_row = full_gs[row]
+        for trackId, categories in RT_CATEGORIES.items():
+            for i in range(len(categories) - 1):
+                try:
+                    this_gs_time = current_row[get_gs_track_column(trackId, categories[i])]
+                    this_time = get_timedelta_from_string(this_gs_time)
+                except:
+                    continue
+
+                try:
+                    next_gs_time = current_row[get_gs_track_column(trackId, categories[i+1])]
+                    next_time = get_timedelta_from_string(next_gs_time)
+                except:
+                    next_time = datetime.timedelta()
+
+                if next_time == datetime.timedelta() or this_time < next_time:
+                    this_column = get_gs_track_column(trackId, categories[i])
+                    next_column = get_gs_track_column(trackId, categories[i+1])
+                    mii = get_value_safely(full_gs, row, this_column-1)
+                    date = get_value_safely(full_gs, row, this_column+1)
+                    ghost = get_value_safely(full_gs, row, this_column+3)
+                    vehicle = get_value_safely(full_gs, row, this_column+5)
+                    player = get_value_safely(full_gs, row, this_column+6)
+                    controller = get_value_safely(full_gs, row, this_column+7)
+
+                    full_gs[row][next_column-1] = mii
+                    full_gs[row][next_column] = this_gs_time
+                    full_gs[row][next_column+1] = date
+                    full_gs[row][next_column+3] = ghost
+                    full_gs[row][next_column+5] = vehicle
+                    full_gs[row][next_column+6] = player
+                    full_gs[row][next_column+7] = controller
+                    print(f"[UNRESTRICTED] Better time in worst category found at row {row}:")
     wks.update(full_gs, value_input_option="USER_ENTERED")
 
 if __name__ == "__main__":
