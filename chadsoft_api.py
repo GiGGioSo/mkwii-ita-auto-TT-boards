@@ -12,8 +12,14 @@ TIME_WAIT_AFTER_GET = 1/2
 TIME_WAIT_AFTER_HEAD = 1/10
 
 GS_START_INDEX = 14
-GS_TRACKS_INTERVAL = 9
-NUM_ROWS_PARTIAL_UPDATE = 5
+GS_TRACKS_INTERVAL = 11
+NUM_ROWS_PARTIAL_UPDATE = 20
+
+CHECK_FULL_3LAP_NORMAL_COLUMN = 1
+CHECK_FULL_3LAP_UNRESTRICTED_COLUMN = 2
+
+ID_COLUMN = 5
+LAST_MODIFIED_COLUMN = 6
 
 ### Values meaning ###
 # 
@@ -67,8 +73,8 @@ RT_CATEGORIES = {
 
 base_url = "https://tt.chadsoft.co.uk/"
 modifiers_url = "?times=pb" #To get only the PBs
-sa = gspread.service_account(filename="account_service_ghosts.json")
-sh = sa.open("Cose Per Automatizzare Tempi TT")
+sa = gspread.service_account(filename="mkwii-ita-auto-tt-service-key.json")
+sh = sa.open_by_key("1pzvXA5NeHaqgaUe5ft_d4TauEbX9lVFxVp3dM51HsuA")
 wks = sh.worksheet("ProvaDatabase")
 print("SUCCESSFULLY CONNECTED TO GOOGLE SHEETS IN %.2f SECONDS" % (time.time() - start_time))
 
@@ -345,17 +351,22 @@ def get_gs_time_from_timedelta(time, original=True):
 
 def get_value_safely(sheet, row, column):
     try:
-        value = sheet[row][column]
+        value = str(sheet[row][column])
     except:
         value = ""
     finally:
         return value
 
+def get_time_from_gs_timestamp(time_stamp):
+    if len(time_stamp) == 10: return time_stamp
+    base_time = datetime.datetime(1899, 12, 30)
+    return (base_time + datetime.timedelta(days=int(time_stamp))).isoformat()[:10]
+
 def main():
     global wks
     full_gs = wks.get_values(value_render_option="FORMULA")
-    IDs = [i[5] for i in full_gs[2:]]
-    LMs = [i[6] for i in full_gs[2:]]
+    IDs = [i[ID_COLUMN] for i in full_gs[2:]]
+    LMs = [i[LAST_MODIFIED_COLUMN] for i in full_gs[2:]]
     row = 1 #Current row
     from_last_gs_update = 0
     for ID, LM in zip(IDs, LMs):
@@ -365,7 +376,7 @@ def main():
             continue
         ID, jolly = get_jolly_and_purify_ID(ID)
         
-        print("[CHECKING] ID:", ID)
+        print(f"[CHECKING ROW {row}] ID: {ID}")
 
         cd_LM = cd_get_last_modified(ID)
         if LM != "" and datetime.datetime.fromisoformat(LM) > cd_LM:
@@ -386,7 +397,7 @@ def main():
                 categoryId = -1
             gs_track_column = get_gs_track_column(trackId, categoryId)
             if gs_track_column == "INVALID_TRACK_CATEGORY":
-                print("  [SKIPPING INVALID TRACK CATEGORY]", g["trackName"] + "; category:", get_category(categoryId))
+                print(f"  [SKIPPING INVALID TRACK CATEGORY] {g['trackName']}; category: {get_category(categoryId)}")
                 continue
 
             new_time = g["finishTimeSimple"]
@@ -402,36 +413,23 @@ def main():
                 or (full_gs[row+jolly][gs_track_column+3] != "TBA" and new_time < old_time)):
                 continue
 
-            # if RT_CATEGORIES[trackId].index(categoryId) == 1:
-            #     before_time = datetime.timedelta()
-            #     try:
-            #         before_time = gs_row_values[get_gs_track_column(trackId, RT_CATEGORIES[trackId][0])]
-            #         if "°" in before_time: before_time = before_time[:-1]
-            #         before_time = get_timedelta_from_chadsoft(before_time)
-            #     except:
-            #         before_time = datetime.timedelta()
-            #     if before_time != datetime.timedelta() and before_time < new_time:
-            #         new_time = get_gs_time_from_timedelta(before_time, original=False)
-            #     else:
-            #         new_time = get_gs_time_from_timedelta(new_time)
-
-
-            new_time = get_gs_time_from_timedelta(new_time, categoryId not in [-1, 0, 2])
+            new_time = get_gs_time_from_timedelta(new_time, categoryId not in [-1, 0, 2, 18])
 
             print("  (NEW GHOSTS FOUND)", g["trackName"] + "; category:", get_category(categoryId) + "; time:", new_time)
             # Modify the values in the full_gs to the ones of the GHOST
             full_gs[row+jolly][gs_track_column-1] = "=IMAGE(\"" + get_ghost_mii(g["href"]) + "\")" # Mii image link, taken from chadsoft, mettere formula =IMAGE([link])
             full_gs[row+jolly][gs_track_column] = new_time
-            full_gs[row+jolly][gs_track_column+1] = g["dateSet"][:10]
+            full_gs[row+jolly][gs_track_column+1] = "'"+g["dateSet"][:10]
             full_gs[row+jolly][gs_track_column+3] = "=HYPERLINK(\"" + get_ghost_link(g["href"]) + "\"; \"Sì\")" # Ghost info, taken from chadsoft, mettere
-            full_gs[row+jolly][gs_track_column+5] = get_vehicle(g["vehicleId"])
-            full_gs[row+jolly][gs_track_column+6] = get_driver(g["driverId"])
-            full_gs[row+jolly][gs_track_column+7] = get_controller(g["controller"])
+            full_gs[row+jolly][gs_track_column+5] = ""
+            full_gs[row+jolly][gs_track_column+7] = get_vehicle(g["vehicleId"])
+            full_gs[row+jolly][gs_track_column+8] = get_driver(g["driverId"])
+            full_gs[row+jolly][gs_track_column+9] = get_controller(g["controller"])
 
 
 
         shifted_LM = cd_LM + datetime.timedelta(minutes=20)
-        full_gs[row][2] = shifted_LM.isoformat()
+        full_gs[row][LAST_MODIFIED_COLUMN] = shifted_LM.isoformat()
 
         if from_last_gs_update >= NUM_ROWS_PARTIAL_UPDATE:
             from_last_gs_update = 0
@@ -448,13 +446,21 @@ def main():
     for name in names:
         row += 1
         current_row = full_gs[row]
+
+        complete_norm = True
+        complete_unr = True
+
         for trackId, categories in RT_CATEGORIES.items():
+            track_has_sc_glitch = False
             for i in range(len(categories) - 1):
                 try:
                     this_gs_time = current_row[get_gs_track_column(trackId, categories[i])]
                     this_time = get_timedelta_from_string(this_gs_time)
                 except:
+                    if categories[i] in [0, 2, -1]: complete_norm = False
                     continue
+
+                if categories[i] in [16, 1]: track_has_sc_glitch = True
 
                 try:
                     next_gs_time = current_row[get_gs_track_column(trackId, categories[i+1])]
@@ -466,20 +472,32 @@ def main():
                     this_column = get_gs_track_column(trackId, categories[i])
                     next_column = get_gs_track_column(trackId, categories[i+1])
                     mii = get_value_safely(full_gs, row, this_column-1)
-                    date = get_value_safely(full_gs, row, this_column+1)
+                    date = get_time_from_gs_timestamp(get_value_safely(full_gs, row, this_column+1))
                     ghost = get_value_safely(full_gs, row, this_column+3)
-                    vehicle = get_value_safely(full_gs, row, this_column+5)
-                    player = get_value_safely(full_gs, row, this_column+6)
-                    controller = get_value_safely(full_gs, row, this_column+7)
+                    video = get_value_safely(full_gs, row, this_column+5)
+                    vehicle = get_value_safely(full_gs, row, this_column+7)
+                    player = get_value_safely(full_gs, row, this_column+8)
+                    controller = get_value_safely(full_gs, row, this_column+9)
 
                     full_gs[row][next_column-1] = mii
                     full_gs[row][next_column] = this_gs_time
                     full_gs[row][next_column+1] = date
                     full_gs[row][next_column+3] = ghost
-                    full_gs[row][next_column+5] = vehicle
-                    full_gs[row][next_column+6] = player
-                    full_gs[row][next_column+7] = controller
+                    full_gs[row][next_column+5] = video
+                    full_gs[row][next_column+7] = vehicle
+                    full_gs[row][next_column+8] = player
+                    full_gs[row][next_column+9] = controller
                     print(f"[UNRESTRICTED] Better time in worst category found at row {row}:")
+
+            if not track_has_sc_glitch: complete_unr = False
+
+        if complete_norm: complete_unr = True
+        full_gs[row][CHECK_FULL_3LAP_NORMAL_COLUMN] = complete_norm
+        full_gs[row][CHECK_FULL_3LAP_UNRESTRICTED_COLUMN] = complete_unr
+
+        if complete_norm: print(f"[3LAP NORMAL]       is complete: {complete_norm} at row {row}")
+        if complete_unr:  print(f"[3LAP UNRESTRICTED] is complete: {complete_unr} at row {row}")
+
     wks.update(full_gs, value_input_option="USER_ENTERED")
 
 if __name__ == "__main__":
