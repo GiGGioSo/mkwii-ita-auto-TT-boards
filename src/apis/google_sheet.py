@@ -4,9 +4,12 @@ import datetime
 
 # https://docs.google.com/spreadsheets/d/1pzvXA5NeHaqgaUe5ft_d4TauEbX9lVFxVp3dM51HsuA/edit#gid=1854354439
 
+# Default options, modifiable
+NUM_ROWS_PARTIAL_UPDATE = 3
+
+# Don't touch
 GS_START_INDEX = 14
 GS_TRACKS_INTERVAL = 11
-NUM_ROWS_PARTIAL_UPDATE = 20
 
 CHECK_FULL_3LAP_NORMAL_COLUMN = 1
 CHECK_FULL_3LAP_UNRESTRICTED_COLUMN = 2
@@ -49,7 +52,7 @@ RT_CATEGORIES = {
     "15B303B288F4707E5D0AF28367C8CE51CDEAB490": [2, 1],  # N64 Castello di Bowser (Normal / Glitch)
 }
 
-def get_worksheet(service_key_filename: str, google_sheet_key: str, worksheet_name: str, debug: bool = False) -> gspread.worksheet.Worksheet: #TODO: Error handling in here
+def get_worksheet(service_key_filename: str, google_sheet_key: str, worksheet_name: str) -> gspread.worksheet.Worksheet: #TODO: Error handling in here
     """Connect to the Google Sheets API with gspread, using a service_accout key, the sheet's key and the worksheet's name.
 
     return: Worksheet object of the wanted sheet
@@ -57,9 +60,7 @@ def get_worksheet(service_key_filename: str, google_sheet_key: str, worksheet_na
     start_time = time.time()
     sa = gspread.service_account(filename=service_key_filename)
     sh = sa.open_by_key(google_sheet_key)
-    if debug: print("SUCCESSFULLY CONNECTED TO GOOGLE SHEETS IN %.2f SECONDS" % (time.time() - start_time))
-
-    return sh.worksheet(worksheet_name)
+    return sh.worksheet(worksheet_name), f"SUCCESSFULLY CONNECTED TO GOOGLE SHEETS IN {time.time() - start_time} SECONDS"
 
 def get_track_column(ID: str, categoryId: int) -> int:
     """Calculate the column of the track using the track ID and the category ID, based on the tracks in RT_CATEGORIES.
@@ -89,7 +90,7 @@ def get_timedelta_from_timestring(time: str) -> datetime.timedelta:
 
 def get_timestring_from_timedelta(time: datetime.timedelta, categoryId: int) -> str:
     time = str(time).split(':')[1:]
-    if categoryId in [-1, 0, 2, 18]: jolly = "°"
+    if categoryId not in [-1, 0, 2, 18]: jolly = "°"
     else: jolly = ""
     if len(time[1]) == 2:
         time[1] += ".000"
