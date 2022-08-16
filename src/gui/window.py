@@ -60,7 +60,7 @@ class MainWindow(QMainWindow):
 		self.setCentralWidget(self.everything)
 
 	def add_output(self, msg: str) -> None:
-		self.scroll_layout.addRow(QLabel(msg))
+		self.scroll_layout.insertRow(0, QLabel(msg))
 
 	def start_button_clicked(self):
 		self.start_button.setEnabled(False)
@@ -69,7 +69,7 @@ class MainWindow(QMainWindow):
 
 	def updater_finished(self):
 		self.start_button.setEnabled(True)
-		self.add_output("Task finished or stopped.\n\n\n\n")
+		self.add_output("\n\n\nTask finished or stopped.")
 
 	def stop_button_clicked(self):
 		if self.updater.isRunning():

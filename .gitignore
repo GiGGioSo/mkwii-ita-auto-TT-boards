@@ -4,3 +4,11 @@
 *.json
 
 *.pyc
+
+build/
+
+dist/
+
+create-release
+
+*.spec

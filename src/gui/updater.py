@@ -6,7 +6,7 @@ from PySide6.QtCore import QThread, Signal
 from apis import google_sheet as gs
 from apis import chadsoft as cd
 
-SERVICE_KEY_FILENAME = "../mkwii-ita-auto-tt-service-key.json"
+SERVICE_KEY_FILENAME = "mkwii-ita-auto-tt-service-key.json"
 GOOGLE_SHEET_KEY = "1pzvXA5NeHaqgaUe5ft_d4TauEbX9lVFxVp3dM51HsuA"
 WORKSHEET_NAME = "ProvaDatabase"
 
