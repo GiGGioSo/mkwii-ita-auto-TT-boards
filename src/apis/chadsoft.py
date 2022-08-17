@@ -254,7 +254,7 @@ def get_controller(ID: int) -> str:
         return ""
 
 def get_category(ID: int) -> str:
-    if ID == -1 or ID == 0 or ID == 2:
+    if ID in [0, -1, 2, 18]:
         return "No-SC"
     elif ID == 1:
         return "Glitch"

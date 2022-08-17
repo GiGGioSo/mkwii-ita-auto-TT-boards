@@ -4,9 +4,6 @@ import datetime
 
 # https://docs.google.com/spreadsheets/d/1pzvXA5NeHaqgaUe5ft_d4TauEbX9lVFxVp3dM51HsuA/edit#gid=1854354439
 
-# Default options, modifiable
-NUM_ROWS_PARTIAL_UPDATE = 3
-
 # Don't touch
 GS_START_INDEX = 14
 GS_TRACKS_INTERVAL = 11
@@ -147,18 +144,25 @@ def get_date_from_gs_timestamp(time_stamp: str) -> datetime.timedelta:
 
     If the time is already correctly formatted, return: time_stamp as it was.
     Otherwise, return: time converted in the format YYYY-MM-DD
+    If the value is "Sconosciuto", return: "Sconosciuto"
+
+    REIMPLEMENT THIS IN A BETTER WAY PLS
     """
     # This is surely an awful way to check if the format's correct, GO LEARN REGEXs
     try:
-        assert(len(time_stamp) == 10)
-        assert(len(time_stamp.split("-")[0]) == 4)
-        assert(len(time_stamp.split("-")[1]) == 2)
-        assert(len(time_stamp.split("-")[2]) == 2)
-        int(time_stamp.split("-")[0])
-        int(time_stamp.split("-")[1])
-        int(time_stamp.split("-")[2])
+        int(time_stamp)
+        try:
+            assert(len(time_stamp) == 10)
+            assert(len(time_stamp.split("-")[0]) == 4)
+            assert(len(time_stamp.split("-")[1]) == 2)
+            assert(len(time_stamp.split("-")[2]) == 2)
+            int(time_stamp.split("-")[0])
+            int(time_stamp.split("-")[1])
+            int(time_stamp.split("-")[2])
+        except:
+            base_time = datetime.datetime(1899, 12, 30)
+            return (base_time + datetime.timedelta(days=int(time_stamp))).isoformat()[:10]
+        else:
+            return time_stamp
     except:
-        base_time = datetime.datetime(1899, 12, 30)
-        return (base_time + datetime.timedelta(days=int(time_stamp))).isoformat()[:10]
-    else:
         return time_stamp
