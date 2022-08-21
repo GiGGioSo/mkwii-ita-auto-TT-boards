@@ -1,11 +1,12 @@
 import sys
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QStyleFactory
 
 from gui import window as win
 
 def main():
     try:
         app = QApplication(sys.argv)
+        QApplication.setStyle(QStyleFactory.create("Fusion"))
         window = win.MainWindow()
         window.show()
         app.exec()
