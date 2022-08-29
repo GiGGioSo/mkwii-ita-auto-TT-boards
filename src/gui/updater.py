@@ -69,7 +69,7 @@ class Updater(QThread):
                 if self.debug_skipped: self.display_msg.emit(f"[PLAYER SKIPPED AT ROW {row+1}]")
                 continue
             ID, jolly = gs.get_jolly_and_purify_ID(ID)
-            
+
             if self.debug_checked: self.display_msg.emit(f"[CHECKING ROW {row+1}] ID: {ID}")
 
             cd_LM = cd.get_player_last_modified(ID)
@@ -104,7 +104,7 @@ class Updater(QThread):
                     old_time = gs.get_timedelta_from_timestring(old_time)
                 except:
                     old_time = datetime.timedelta()
-                    
+
                 if not (old_time == datetime.timedelta() 
                     or (full_gs[row+jolly][gs_track_column+3] in ["TBA", "No"] and new_time <= old_time) 
                     or (full_gs[row+jolly][gs_track_column+3] not in ["TBA", "No"] and new_time < old_time)):
@@ -155,8 +155,8 @@ class Updater(QThread):
             row += 1
             current_row = full_gs[row]
 
-            complete_norm = True
-            complete_unr = True
+            complete_3lap_norm = True
+            complete_3lap_unr = True
 
             for trackId, categories in gs.RT_CATEGORIES.items():
                 if self.isInterruptionRequested():
@@ -168,7 +168,7 @@ class Updater(QThread):
                         this_gs_time = current_row[gs.get_track_column(trackId, categories[i])]
                         this_time = gs.get_timedelta_from_timestring(this_gs_time)
                     except:
-                        if categories[i] in [0, 2, -1]: complete_norm = False
+                        if categories[i] in [0, 2, 18, -1]: complete_3lap_norm = False
                         continue
 
                     if categories[i] in [16, 1]: track_has_sc_glitch = True
@@ -198,23 +198,84 @@ class Updater(QThread):
                         full_gs[row][next_column+7] = vehicle
                         full_gs[row][next_column+8] = player
                         full_gs[row][next_column+9] = controller
-                        if self.debug_found: self.display_msg.emit(f"[UNRESTRICTED] Better time in worst category found at row: {row+1}, column: {next_column+1}")
+                        if self.debug_found: self.display_msg.emit(f"[UNRESTRICTED_3LAP] Found at row: {row+1}, column: {next_column+1}")
 
-                if not track_has_sc_glitch: complete_unr = False
+                if not track_has_sc_glitch: complete_3lap_unr = False
 
-            if complete_norm: complete_unr = True
-            full_gs[row][gs.CHECK_FULL_3LAP_NORMAL_COLUMN] = complete_norm
-            full_gs[row][gs.CHECK_FULL_3LAP_UNRESTRICTED_COLUMN] = complete_unr
+            if complete_3lap_norm: complete_3lap_unr = True
+            full_gs[row][gs.CHECK_FULL_3LAP_NORMAL_COLUMN] = complete_3lap_norm
+            full_gs[row][gs.CHECK_FULL_3LAP_UNRESTRICTED_COLUMN] = complete_3lap_unr
 
             if self.debug_complete:
-                if complete_norm: self.display_msg.emit(f"[3LAP NORMAL]       is complete at row {row+1}")
-                if complete_unr:  self.display_msg.emit(f"[3LAP UNRESTRICTED] is complete at row {row+1}")
+                if complete_3lap_norm: self.display_msg.emit(f"[3LAP NORMAL]       is complete at row {row+1}")
+                if complete_3lap_unr:  self.display_msg.emit(f"[3LAP UNRESTRICTED] is complete at row {row+1}")
+
 
         if self.debug_gs_unr_info: self.display_msg.emit("[UPDATING...] Uploading data to Google Sheets")
         gs.set_all_values(wks, full_gs)
-        self.display_msg.emit("\n[UNRESTRICTEDs UPDATE FINISHED]")
+        self.display_msg.emit("\n[UNRESTRICTED_3LAPs UPDATE FINISHED]")
 
-    def update_everything(self) -> None:
+        row = 1
+        for name in names:
+            if self.isInterruptionRequested():
+                self.stopped.emit()
+                return -1
+            row += 1
+            current_row = full_gs[row]
+
+            complete_flap_norm = True
+            complete_flap_unr = True
+
+            for trackId, categories in gs.RT_CATEGORIES.items():
+                if self.isInterruptionRequested():
+                    self.stopped.emit()
+                    return -1
+                track_has_sc_glitch = False
+                for i in range(len(categories) - 1):
+                    try:
+                        this_gs_time = current_row[gs.get_track_column(trackId, categories[i]) + 2] # + 2 because the flap time is offset 2 from 3lap time
+                        this_time = gs.get_timedelta_from_timestring(this_gs_time)
+                    except:
+                        if categories[i] in [0, 2, 18, -1]: complete_flap_norm = False
+                        continue
+
+                    if categories[i] in [16, 1]: track_has_sc_glitch = True
+
+                    try:
+                        next_gs_time = current_row[gs.get_track_column(trackId, categories[i+1]) + 2] # + 2 because the flap time is offset 2 from 3lap time
+                        next_time = gs.get_timedelta_from_timestring(next_gs_time)
+                    except:
+                        next_time = datetime.timedelta()
+
+                    print(f"{this_gs_time} _/\\_ {next_gs_time}")
+
+                    if next_time == datetime.timedelta() or this_time < next_time:
+                        this_column = gs.get_track_column(trackId, categories[i])
+                        next_column = gs.get_track_column(trackId, categories[i+1])
+
+                        ghost = gs.get_value_safely(full_gs, row, this_column+4)
+                        video = gs.get_value_safely(full_gs, row, this_column+6)
+
+                        full_gs[row][next_column+2] = this_gs_time
+                        full_gs[row][next_column+4] = ghost
+                        full_gs[row][next_column+6] = video
+                        if self.debug_found: self.display_msg.emit(f"[UNRESTRICTED_FLAP] Found at row: {row+1}, column: {next_column+3}") # +3 instead of +1 for the offset
+
+                if not track_has_sc_glitch: complete_flap_unr = False
+
+            if complete_flap_norm: complete_flap_unr = True
+            full_gs[row][gs.CHECK_FULL_FLAP_NORMAL_COLUMN] = complete_flap_norm
+            full_gs[row][gs.CHECK_FULL_FLAP_UNRESTRICTED_COLUMN] = complete_flap_unr
+
+            if self.debug_complete:
+                if complete_flap_norm: self.display_msg.emit(f"[FLAP NORMAL]       is complete at row {row+1}")
+                if complete_flap_unr:  self.display_msg.emit(f"[FLAP UNRESTRICTED] is complete at row {row+1}")
+
+        if self.debug_gs_unr_info: self.display_msg.emit("[UPDATING...] Uploading data to Google Sheets")
+        gs.set_all_values(wks, full_gs)
+        self.display_msg.emit("\n[UNRESTRICTED_FLAP UPDATE FINISHED]")
+
+    def update_everything(self):
         self.display_msg.emit("\n[UPDATE OF EVERYTHING STARTED]")
         wks, feedback = gs.get_worksheet(SERVICE_KEY_FILENAME, GOOGLE_SHEET_KEY, WORKSHEET_NAME)
         if feedback:
