@@ -247,8 +247,6 @@ class Updater(QThread):
                     except:
                         next_time = datetime.timedelta()
 
-                    print(f"{this_gs_time} _/\\_ {next_gs_time}")
-
                     if next_time == datetime.timedelta() or this_time < next_time:
                         this_column = gs.get_track_column(trackId, categories[i])
                         next_column = gs.get_track_column(trackId, categories[i+1])
