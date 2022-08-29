@@ -12,6 +12,6 @@ Though, they're store in a different way inside the chadsoft database, and so it
 In the short term, I will improve the user interface, add log files and the ability to automatically save the ghosts found.
 
 ## Donate
-I'm working on this project for free in my spare time, but consider a small donation if it was useful to you, to help me continue develop it.
+I'm working on this project for free in my spare time, but consider a small donation if it was useful to you, to help me continue developing it.
 Thank you.
 [PayPal](https://www.paypal.com/donate/?hosted_button_id=U6TUEPB28ZH48)
