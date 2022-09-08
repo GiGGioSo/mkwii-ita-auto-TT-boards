@@ -119,8 +119,8 @@ class Updater(QThread):
                 full_gs[row+jolly][gs_track_column+1] = "'"+g["dateSet"][:10]
                 full_gs[row+jolly][gs_track_column+3] = "=HYPERLINK(\"" + cd.get_ghost_link(g["href"]) + "\"; \"Sì\")" # Ghost info, taken from chadsoft, mettere
                 full_gs[row+jolly][gs_track_column+5] = ""
-                full_gs[row+jolly][gs_track_column+7] = cd.get_vehicle(g["vehicleId"])
-                full_gs[row+jolly][gs_track_column+8] = cd.get_driver(g["driverId"])
+                full_gs[row+jolly][gs_track_column+7] = cd.get_driver(g["driverId"])
+                full_gs[row+jolly][gs_track_column+8] = cd.get_vehicle(g["vehicleId"])
                 full_gs[row+jolly][gs_track_column+9] = cd.get_controller(g["controller"])
 
 
