@@ -142,14 +142,14 @@ class Updater(QThread):
         self.display_msg.emit("\n[3LAPs UPDATE FINISHED]")
 
     def update_unrestricted_and_checks(self, wks: gspread.worksheet.Worksheet = None):
-        self.display_msg.emit("\n[unrestricted UPDATE STARTED]")
+        self.display_msg.emit("\n[UNRESTRICTED UPDATE STARTED]")
         if wks == None: 
             wks, feedback = gs.get_worksheet(SERVICE_KEY_FILENAME, GOOGLE_SHEET_KEY, WORKSHEET_NAME)
             if feedback and self.debug_gs_unr_info:
                 self.display_msg.emit(feedback)
         full_gs = gs.get_all_values(wks)
 
-        # After everything, check the unresctricted
+        # After everything, check the unrestricted
         names = [i[0] for i in full_gs[2:]]
         row = 1
         for name in names:
