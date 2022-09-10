@@ -59,7 +59,6 @@ class Updater(QThread):
         IDs = [i[gs.ID_COLUMN] for i in full_gs[2:]]
         LMs = [i[gs.LAST_MODIFIED_COLUMN] for i in full_gs[2:]]
         row = 1 #Current row
-        display_row = row+1 #Row to display in messages
         from_last_gs_update = 0
         for ID, LM in zip(IDs, LMs):
             if self.isInterruptionRequested():
@@ -67,20 +66,20 @@ class Updater(QThread):
                 return -1
             row += 1
             if ID == "noID":
-                if self.debug_skipped: self.display_msg.emit(f"[SKIPPING ROW {display_row}] NO ID")
+                if self.debug_skipped: self.display_msg.emit(f"[SKIPPING ROW {row+1}] NO ID") # +1 for the Spreadsheet's offset
                 continue
             elif ID == "":
-                if self.debug_skipped: self.display_msg.emit(f"  [SKIPPING ROW {display_row}] EMPTY ID CELL")
+                if self.debug_skipped: self.display_msg.emit(f"  [SKIPPING ROW {row+1}] EMPTY ID CELL")
                 continue
             ID, jolly = gs.get_jolly_and_purify_ID(ID)
 
-            if self.debug_checked: self.display_msg.emit(f"[CHECKING ROW {display_row}] ID: {ID}")
+            if self.debug_checked: self.display_msg.emit(f"[CHECKING ROW {row+1}] ID: {ID}")
 
             cd_LM = cd.get_player_last_modified(ID)
             if LM != "" and datetime.datetime.fromisoformat(LM) > cd_LM:
                 continue
 
-            if self.debug_checked: self.display_msg.emit(f"  [OUTDATED DATA FOUND AT ROW {display_row}] fetching player JSON from Chadsoft...")
+            if self.debug_checked: self.display_msg.emit(f"  [OUTDATED DATA FOUND AT ROW {row+1}] fetching player JSON from Chadsoft...")
             from_last_gs_update += 1
             player_data = json.loads(cd.get_player_pbs(ID))
             ghosts = player_data["ghosts"]
@@ -118,7 +117,7 @@ class Updater(QThread):
 
                 if self.debug_ghosts: self.display_msg.emit(f"  (NEW GHOSTS FOUND), {g['trackName']}; category: {cd.get_category(categoryId)}; time: {new_time}, ghost_link: {cd.get_ghost_link(g['href'])}")
                 # Modify the values in the full_gs to the ones of the GHOST
-                full_gs[row+jolly][gs_track_column-1] = "=IMAGE(\"" + cd.get_ghost_mii(g["href"]) + "\")" # Mii image link, taken from chadsoft (run.mii)
+                full_gs[row+jolly][gs_track_column-1] = "=IMAGE(\"" + cd.get_ghost_mii(g["href"]) + "\")" # Mii image link, taken from chadsoft (run_link.mii)
                 full_gs[row+jolly][gs_track_column] = new_time
                 full_gs[row+jolly][gs_track_column+1] = "'"+g["dateSet"][:10]
                 full_gs[row+jolly][gs_track_column+3] = "=HYPERLINK(\"" + cd.get_ghost_link(g["href"]) + "\"; \"Sì\")" # Ghost info, taken from chadsoft
@@ -288,12 +287,13 @@ class Updater(QThread):
         self.display_msg.emit("\n[UPDATE OF EVERYTHING FINISHED]")
 
     def run(self):
-        if self.isInterruptionRequested():
-            self.stopped.emit()
-            return -1
-
+        
         match self.mode:
             case 0 : self.update_everything()
             case 1 : self.update_3laps()
             case 2 : self.update_unrestricted_and_checks()
             case 3 : self.display_msg.emit("\n\n[NOTHING TO DO]\n\n")
+        
+        if self.isInterruptionRequested():
+            self.stopped.emit()
+            return -1
