@@ -52,7 +52,7 @@ def get_datetime_from_chadsoft_date(cd_date: str) -> datetime.datetime:
     """
     cd_date = cd_date.split()
     hr_raw = [int(x) for x in cd_date[4].split(":")]
-    match cd_date:
+    match cd_date[2]:
         case "Jan" : cd_date[2] = 1
         case "Feb" : cd_date[2] = 2
         case "Mar" : cd_date[2] = 3
