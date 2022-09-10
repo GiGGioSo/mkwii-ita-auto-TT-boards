@@ -287,13 +287,13 @@ class Updater(QThread):
         self.display_msg.emit("\n[UPDATE OF EVERYTHING FINISHED]")
 
     def run(self):
+
+        if self.isInterruptionRequested():
+            self.stopped.emit()
+            return -1
         
         match self.mode:
             case 0 : self.update_everything()
             case 1 : self.update_3laps()
             case 2 : self.update_unrestricted_and_checks()
             case 3 : self.display_msg.emit("\n\n[NOTHING TO DO]\n\n")
-        
-        if self.isInterruptionRequested():
-            self.stopped.emit()
-            return -1
