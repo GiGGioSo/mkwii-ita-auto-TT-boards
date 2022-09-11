@@ -65,8 +65,11 @@ class Updater(QThread):
                 self.stopped.emit()
                 return -1
             row += 1
-            if ID == "noID" or ID == "":
-                if self.debug_skipped: self.display_msg.emit(f"[PLAYER SKIPPED AT ROW {row+1}]")
+            if ID == "noID":
+                if self.debug_skipped: self.display_msg.emit(f"[SKIPPING ROW {row+1}] NO ID") # +1 for the Spreadsheet's offset
+                continue
+            elif ID == "":
+                if self.debug_skipped: self.display_msg.emit(f"  [SKIPPING ROW {row+1}] EMPTY ID CELL")
                 continue
             ID, jolly = gs.get_jolly_and_purify_ID(ID)
 
@@ -76,7 +79,7 @@ class Updater(QThread):
             if LM != "" and datetime.datetime.fromisoformat(LM) > cd_LM:
                 continue
 
-            if self.debug_checked: self.display_msg.emit("  [OUTDATED DATA FOUND] fetching player JSON from Chadsoft...")
+            if self.debug_checked: self.display_msg.emit(f"  [OUTDATED DATA FOUND AT ROW {row+1}] fetching player JSON from Chadsoft...")
             from_last_gs_update += 1
             player_data = json.loads(cd.get_player_pbs(ID))
             ghosts = player_data["ghosts"]
@@ -114,10 +117,10 @@ class Updater(QThread):
 
                 if self.debug_ghosts: self.display_msg.emit(f"  (NEW GHOSTS FOUND), {g['trackName']}; category: {cd.get_category(categoryId)}; time: {new_time}, ghost_link: {cd.get_ghost_link(g['href'])}")
                 # Modify the values in the full_gs to the ones of the GHOST
-                full_gs[row+jolly][gs_track_column-1] = "=IMAGE(\"" + cd.get_ghost_mii(g["href"]) + "\")" # Mii image link, taken from chadsoft, mettere formula =IMAGE([link])
+                full_gs[row+jolly][gs_track_column-1] = "=IMAGE(\"" + cd.get_ghost_mii(g["href"]) + "\")" # Mii image link, taken from chadsoft (run_link.mii)
                 full_gs[row+jolly][gs_track_column] = new_time
                 full_gs[row+jolly][gs_track_column+1] = "'"+g["dateSet"][:10]
-                full_gs[row+jolly][gs_track_column+3] = "=HYPERLINK(\"" + cd.get_ghost_link(g["href"]) + "\"; \"Sì\")" # Ghost info, taken from chadsoft, mettere
+                full_gs[row+jolly][gs_track_column+3] = "=HYPERLINK(\"" + cd.get_ghost_link(g["href"]) + "\"; \"Sì\")" # Ghost info, taken from chadsoft
                 full_gs[row+jolly][gs_track_column+5] = ""
                 full_gs[row+jolly][gs_track_column+7] = cd.get_driver(g["driverId"])
                 full_gs[row+jolly][gs_track_column+8] = cd.get_vehicle(g["vehicleId"])
@@ -137,15 +140,15 @@ class Updater(QThread):
         gs.set_all_values(wks, full_gs)
         self.display_msg.emit("\n[3LAPs UPDATE FINISHED]")
 
-    def update_unrestricteds_and_checks(self, wks: gspread.worksheet.Worksheet = None):
-        self.display_msg.emit("\n[UNRESTRICTEDs UPDATE STARTED]")
+    def update_unrestricted_and_checks(self, wks: gspread.worksheet.Worksheet = None):
+        self.display_msg.emit("\n[UNRESTRICTED UPDATE STARTED]")
         if wks == None: 
             wks, feedback = gs.get_worksheet(SERVICE_KEY_FILENAME, GOOGLE_SHEET_KEY, WORKSHEET_NAME)
             if feedback and self.debug_gs_unr_info:
                 self.display_msg.emit(feedback)
         full_gs = gs.get_all_values(wks)
 
-        # After everything, check the unresctricted
+        # After everything, check the unrestricted
         names = [i[0] for i in full_gs[2:]]
         row = 1
         for name in names:
@@ -280,19 +283,17 @@ class Updater(QThread):
             if self.debug_gs_3laps_info or self.debug_gs_unr_info: self.display_msg.emit(feedback)
         exit_code = self.update_3laps(wks)
         if exit_code == -1: return -1
-        self.update_unrestricteds_and_checks(wks)
+        self.update_unrestricted_and_checks(wks)
         self.display_msg.emit("\n[UPDATE OF EVERYTHING FINISHED]")
 
     def run(self):
+
         if self.isInterruptionRequested():
             self.stopped.emit()
-            return -1   
-        if self.mode == 0:
-            self.update_everything()
-        elif self.mode == 1:
-            self.update_3laps()
-        elif self.mode == 2:
-            self.update_unrestricteds_and_checks()
-        elif self.mode == 3:
-            self.display_msg.emit("\n\n[NOTHING TO DO]\n\n")
-
+            return -1
+        
+        match self.mode:
+            case 0 : self.update_everything()
+            case 1 : self.update_3laps()
+            case 2 : self.update_unrestricted_and_checks()
+            case 3 : self.display_msg.emit("\n\n[NOTHING TO DO]\n\n")

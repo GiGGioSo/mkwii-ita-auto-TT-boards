@@ -52,32 +52,20 @@ def get_datetime_from_chadsoft_date(cd_date: str) -> datetime.datetime:
     """
     cd_date = cd_date.split()
     hr_raw = [int(x) for x in cd_date[4].split(":")]
-    if cd_date[2] == "Jan":
-        cd_date[2] = 1
-    elif cd_date[2] == "Feb":
-        cd_date[2] = 2
-    elif cd_date[2] == "Mar":
-        cd_date[2] = 3
-    elif cd_date[2] == "Apr":
-        cd_date[2] = 4
-    elif cd_date[2] == "May":
-        cd_date[2] = 5
-    elif cd_date[2] == "Jun":
-        cd_date[2] = 6
-    elif cd_date[2] == "Jul":
-        cd_date[2] = 7
-    elif cd_date[2] == "Aug":
-        cd_date[2] = 8
-    elif cd_date[2] == "Sep":
-        cd_date[2] = 9
-    elif cd_date[2] == "Oct":
-        cd_date[2] = 10
-    elif cd_date[2] == "Nov":
-        cd_date[2] = 11
-    elif cd_date[2] == "Dec":
-        cd_date[2] = 12
-    else:
-        print("[ERROR] '"+cd_date[2]+"' is an invalid month")
+    match cd_date[2]:
+        case "Jan" : cd_date[2] = 1
+        case "Feb" : cd_date[2] = 2
+        case "Mar" : cd_date[2] = 3
+        case "Apr" : cd_date[2] = 4
+        case "May" : cd_date[2] = 5
+        case "Jun" : cd_date[2] = 6
+        case "Jul" : cd_date[2] = 7
+        case "Aug" : cd_date[2] = 8
+        case "Sep" : cd_date[2] = 9
+        case "Oct" : cd_date[2] = 10
+        case "Nov" : cd_date[2] = 11
+        case "Dec" : cd_date[2] = 12
+        case _: print("[ERROR] '"+cd_date[2]+"' is an invalid month")
 
     return datetime.datetime(int(cd_date[3]), cd_date[2], int(cd_date[1]), hr_raw[0], hr_raw[1], hr_raw[2])
 
@@ -88,170 +76,95 @@ def get_ghost_link(ghost: str) -> str:
     return "https://www.chadsoft.co.uk/time-trials" + ghost[:-3] + "html"
 
 def get_vehicle(ID: int) -> str:
-    if ID == 0: 
-        return "Standard Kart S"  
-    if ID == 1: 
-        return "Standard Kart M"  
-    if ID == 2: 
-        return "Standard Kart L"  
-    if ID == 3: 
-        return "Booster Seat"  
-    if ID == 4: 
-        return "Classic Dragster"  
-    if ID == 5: 
-        return "Offroader"  
-    if ID == 6: 
-        return "Mini Beast"  
-    if ID == 7: 
-        return "Wild Wing"  
-    if ID == 8: 
-        return "Flame Flyer"  
-    if ID == 9: 
-        return "Cheep Charger"  
-    if ID == 10: 
-        return "Super Blooper"  
-    if ID == 11: 
-        return "Piranha Prowler"  
-    if ID == 12: 
-        return "Tiny Titan"  
-    if ID == 13: 
-        return "Daytripper"  
-    if ID == 14: 
-        return "Jetsetter"  
-    if ID == 15: 
-        return "Blue Falcon"  
-    if ID == 16: 
-        return "Sprinter"  
-    if ID == 17: 
-        return "Honeycoupe"  
-    if ID == 18: 
-        return "Standard Bike S"  
-    if ID == 19: 
-        return "Standard Bike M"  
-    if ID == 20: 
-        return "Standard Bike L"  
-    if ID == 21: 
-        return "Bullet Bike"  
-    if ID == 22: 
-        return "Mach Bike"  
-    if ID == 23: 
-        return "Flame Runner"  
-    if ID == 24: 
-        return "Bit Bike"  
-    if ID == 25: 
-        return "Sugarscoot"  
-    if ID == 26: 
-        return "Wario Bike"  
-    if ID == 27: 
-        return "Quacker"  
-    if ID == 28: 
-        return "Zip Zip"  
-    if ID == 29: 
-        return "Shooting Star"  
-    if ID == 30: 
-        return "Magikruiser"  
-    if ID == 31: 
-        return "Sneakster"  
-    if ID == 32: 
-        return "Spear"  
-    if ID == 33: 
-        return "Jet Bubble"  
-    if ID == 34: 
-        return "Dolphin Dasher"  
-    if ID == 35: 
-        return "Phantom"  
-    else: 
-        return "" 
+
+    match ID:
+        case 0  : return "Standard Kart S"  
+        case 1  : return "Standard Kart M"  
+        case 2  : return "Standard Kart L"  
+        case 3  : return "Booster Seat"  
+        case 4  : return "Classic Dragster"  
+        case 5  : return "Offroader"  
+        case 6  : return "Mini Beast"  
+        case 7  : return "Wild Wing"  
+        case 8  : return "Flame Flyer"  
+        case 9  : return "Cheep Charger"  
+        case 10 : return "Super Blooper"  
+        case 11 : return "Piranha Prowler"  
+        case 12 : return "Tiny Titan"  
+        case 13 : return "Daytripper"  
+        case 14 : return "Jetsetter"  
+        case 15 : return "Blue Falcon"  
+        case 16 : return "Sprinter"  
+        case 17 : return "Honeycoupe"  
+        case 18 : return "Standard Bike S"  
+        case 19 : return "Standard Bike M"  
+        case 20 : return "Standard Bike L"  
+        case 21 : return "Bullet Bike"  
+        case 22 : return "Mach Bike"  
+        case 23 : return "Flame Runner"  
+        case 24 : return "Bit Bike"  
+        case 25 : return "Sugarscoot"  
+        case 26 : return "Wario Bike"  
+        case 27 : return "Quacker"  
+        case 28 : return "Zip Zip"  
+        case 29 : return "Shooting Star"  
+        case 30 : return "Magikruiser"  
+        case 31 : return "Sneakster"  
+        case 32 : return "Spear"  
+        case 33 : return "Jet Bubble"  
+        case 34 : return "Dolphin Dasher"  
+        case 35 : return "Phantom"  
+        case _: return "" 
 
 def get_driver(ID: int) -> str:
-    if ID == 0: 
-        return "Mario"
-    if ID == 1: 
-        return "Baby Peach"
-    if ID == 2: 
-        return "Waluigi"
-    if ID == 3: 
-        return "Bowser"
-    if ID == 4: 
-        return "Baby Daisy"
-    if ID == 5: 
-        return "Dry Bones"
-    if ID == 6: 
-        return "Baby Mario"
-    if ID == 7: 
-        return "Luigi"
-    if ID == 8: 
-        return "Toad"
-    if ID == 9: 
-        return "Donkey Kong"
-    if ID == 10: 
-        return "Yoshi"
-    if ID == 11: 
-        return "Wario"
-    if ID == 12: 
-        return "Baby Luigi"
-    if ID == 13: 
-        return "Toadette"
-    if ID == 14: 
-        return "Koopa"
-    if ID == 15: 
-        return "Daisy"
-    if ID == 16: 
-        return "Peach"
-    if ID == 17: 
-        return "Birdo"
-    if ID == 18: 
-        return "Diddy Kong"
-    if ID == 19: 
-        return "King Boo"
-    if ID == 20: 
-        return "Bowser Jr."
-    if ID == 21: 
-        return "Dry Bowser"
-    if ID == 22: 
-        return "Funky Kong"
-    if ID == 23: 
-        return "Rosalina"
-    if ID == 24: 
-        return "Small Mii A Male"
-    if ID == 25: 
-        return "Small Mii A Female"
-    if ID == 26: 
-        return "Small Mii B Male"
-    if ID == 27: 
-        return "Small Mii B Female"
-    if ID == 30: 
-        return "Medium Mii A Male"
-    if ID == 31: 
-        return "Medium Mii A Female"
-    if ID == 32: 
-        return "Medium Mii B Male"
-    if ID == 33: 
-        return "Medium Mii B Female"
-    if ID == 36: 
-        return "Large Mii A Male"
-    if ID == 37: 
-        return "Large Mii A Female"
-    if ID == 38: 
-        return "Large Mii B Male"
-    if ID == 39: 
-        return "Large Mii B Female"
-    else: 
-        return ""
+    
+    match ID:
+        case 0  : return "Mario"
+        case 1  : return "Baby Peach"
+        case 2  : return "Waluigi"
+        case 3  : return "Bowser"
+        case 4  : return "Baby Daisy"
+        case 5  : return "Dry Bones"
+        case 6  : return "Baby Mario"
+        case 7  : return "Luigi"
+        case 8  : return "Toad"
+        case 9  : return "Donkey Kong"
+        case 10 : return "Yoshi"
+        case 11 : return "Wario"
+        case 12 : return "Baby Luigi"
+        case 13 : return "Toadette"
+        case 14 : return "Koopa"
+        case 15 : return "Daisy"
+        case 16 : return "Peach"
+        case 17 : return "Birdo"
+        case 18 : return "Diddy Kong"
+        case 19 : return "King Boo"
+        case 20 : return "Bowser Jr."
+        case 21 : return "Dry Bowser"
+        case 22 : return "Funky Kong"
+        case 23 : return "Rosalina"
+        case 24 : return "Small Mii A Male"
+        case 25 : return "Small Mii A Female"
+        case 26 : return "Small Mii B Male"
+        case 27 : return "Small Mii B Female"
+        case 30 : return "Medium Mii A Male"
+        case 31 : return "Medium Mii A Female"
+        case 32 : return "Medium Mii B Male"
+        case 33 : return "Medium Mii B Female"
+        case 36 : return "Large Mii A Male"
+        case 37 : return "Large Mii A Female"
+        case 38 : return "Large Mii B Male"
+        case 39 : return "Large Mii B Female"
+        case _  : return ""
 
 def get_controller(ID: int) -> str:
-    if ID == 0: 
-        return "Wii Wheel" 
-    if ID == 1: 
-        return "Nunchuck" 
-    if ID == 2: 
-        return "Classic"
-    if ID == 3: 
-        return "GameCube"
-    if ID == 15: 
-        return "???" 
-    else: 
-        return ""
+    match ID:
+        case 0  : return "Wii Wheel" 
+        case 1  : return "Nunchuck" 
+        case 2  : return "Classic"
+        case 3  : return "GameCube"
+        case 15 : return "???" 
+        case _  : return ""
 
 def get_category(ID: int) -> str:
     if ID in [0, -1, 2, 18]:
