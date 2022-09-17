@@ -73,13 +73,15 @@ class Updater(QThread):
                 continue
             ID, jolly = gs.get_jolly_and_purify_ID(ID)
 
-            if self.debug_checked: self.display_msg.emit(f"[CHECKING ROW {row+1}] ID: {ID}")
+            Player_Name = full_gs[row][0]
+
+            if self.debug_checked: self.display_msg.emit(f"[CHECKING ROW {row+1}] Player Name: {Player_Name}, ID: {ID}")
 
             cd_LM = cd.get_player_last_modified(ID)
             if LM != "" and datetime.datetime.fromisoformat(LM) > cd_LM:
                 continue
 
-            if self.debug_checked: self.display_msg.emit(f"  [OUTDATED DATA FOUND AT ROW {row+1}] fetching player JSON from Chadsoft...")
+            if self.debug_checked: self.display_msg.emit(f"  [DATA FOUND AT ROW {row+1}] fetching player JSON from Chadsoft...")
             from_last_gs_update += 1
             player_data = json.loads(cd.get_player_pbs(ID))
             ghosts = player_data["ghosts"]
