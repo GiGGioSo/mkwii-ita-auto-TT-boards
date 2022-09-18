@@ -1,31 +1,29 @@
 from binascii import hexlify
-from codecs import ascii_decode, utf_16_be_decode
-from encodings import utf_8
 from os import remove
-from requests import get
 from struct import pack
-from gen1_wii import CoreDataWii
+from apis.mii2studio.gen1_wii import CoreDataWii
+from requests import get
 
-def output(input_file,num:int):
+def genRender(rkglink):
+
+    input_file = "tmp/tmp.miigx"
+
+    r = get(rkglink)
+    with open(input_file,"wb") as wf:
+        # 0xC3 Offset | 0x4A Length | Blocks 0xC3 to 0x85
+        wf.write(r.content[60:60+74])
+
     input_type = "wii"
-    vecchiofile = "a"
-    output_f = "output/output.txt"
-    out = "<><><><><><><><><><><><><><><><><><><><>".encode("utf-16be")
+    vecchiofile = "tmp/a"
 
     orig_mii = CoreDataWii.from_file(input_file)
 
     def u8(data):
         return pack(">B", data)
-
-    out += b"\x00\x0A"
-    out += "Mii Name: ".encode("utf-16be")
-    out += orig_mii.mii_name.encode("utf-16be")
         
     if "switch" not in input_type:
         if orig_mii.creator_name != "\0" * 10:
-            out += b"\x00\x0A"
-            out += "Creator Name: ".encode("utf-16be")
-            out += orig_mii.creator_name.encode("utf-16be")
+            pass
         if orig_mii.birth_month != 0 and orig_mii.birth_day != 0:
             pass
 
@@ -217,14 +215,6 @@ def output(input_file,num:int):
         
         #codecs.decode(mii_data_bytes, "hex")
         #mii_data_bytes = mii_data_bytes.decode("utf-8")
-        
-        url = "https://studio.mii.nintendo.com/miis/image.png?data=" + mii_data.decode("utf-8")
-
-        out += b"\x00\x0A"
-        out += f"Mii Render URLs: {url}&type=face&width=512".encode("utf-16be")
-        out += b"\x00\x0A"
-        out += f"Mii Studio code: {mii_data_bytes}".encode("utf-16be")
 
         remove(vecchiofile)
-
-        return out
+        return "=IMAGE(\"https://studio.mii.nintendo.com/miis/image.png?data=" + mii_data.decode("utf-8") + "\")"
