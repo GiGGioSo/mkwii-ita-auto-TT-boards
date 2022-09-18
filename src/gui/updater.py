@@ -147,7 +147,6 @@ class Updater(QThread):
 
         gs.set_all_values(wks, full_gs)
         self.display_msg.emit("\n[3LAPs UPDATE FINISHED]")
-        rmtree("tmp/")
 
     def update_unrestricted_and_checks(self, wks: gspread.worksheet.Worksheet = None):
         self.display_msg.emit("\n[UNRESTRICTED UPDATE STARTED]")
@@ -299,6 +298,7 @@ class Updater(QThread):
 
         if self.isInterruptionRequested():
             self.stopped.emit()
+            rmtree("tmp/")
             return -1
         
         match self.mode:
