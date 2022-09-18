@@ -1,8 +1,11 @@
 import json
 import datetime
 import gspread
+import os
 from PySide6.QtCore import QThread, Signal
+from shutil import rmtree
 
+from apis.mii2studio import mii2studio as m2s
 from apis import google_sheet as gs
 from apis import chadsoft as cd
 
@@ -50,6 +53,7 @@ class Updater(QThread):
             self.mode = 3
 
     def update_3laps(self, wks: gspread.worksheet.Worksheet = None):
+        os.mkdir("tmp")
         self.display_msg.emit("\n[3LAPs UPDATE STARTED]")
         if wks == None: 
             wks, feedback = gs.get_worksheet(SERVICE_KEY_FILENAME, GOOGLE_SHEET_KEY, WORKSHEET_NAME)
@@ -63,6 +67,7 @@ class Updater(QThread):
         for ID, LM in zip(IDs, LMs):
             if self.isInterruptionRequested():
                 self.stopped.emit()
+                rmtree("tmp/")
                 return -1
             row += 1
             if ID == "noID":
@@ -89,6 +94,7 @@ class Updater(QThread):
             for g in ghosts:
                 if self.isInterruptionRequested():
                     self.stopped.emit()
+                    rmtree("tmp/")
                     return -1   
                 if g["200cc"] == True or g["trackId"] not in list(gs.RT_CATEGORIES.keys()):
                     continue
@@ -119,7 +125,7 @@ class Updater(QThread):
 
                 if self.debug_ghosts: self.display_msg.emit(f"  (NEW GHOSTS FOUND), {g['trackName']}; category: {cd.get_category(categoryId)}; time: {new_time}, ghost_link: {cd.get_ghost_link(g['href'])}")
                 # Modify the values in the full_gs to the ones of the GHOST
-                full_gs[row+jolly][gs_track_column-1] = "=IMAGE(\"" + cd.get_ghost_mii(g["href"]) + "\")" # Mii image link, taken from chadsoft (run_link.mii)
+                full_gs[row+jolly][gs_track_column-1] = m2s.genRender(cd.get_ghost_link(g["href"])[:-4]+"rkg")
                 full_gs[row+jolly][gs_track_column] = new_time
                 full_gs[row+jolly][gs_track_column+1] = "'"+g["dateSet"][:10]
                 full_gs[row+jolly][gs_track_column+3] = "=HYPERLINK(\"" + cd.get_ghost_link(g["href"]) + "\"; \"Sì\")" # Ghost info, taken from chadsoft
@@ -141,6 +147,7 @@ class Updater(QThread):
 
         gs.set_all_values(wks, full_gs)
         self.display_msg.emit("\n[3LAPs UPDATE FINISHED]")
+        rmtree("tmp/")
 
     def update_unrestricted_and_checks(self, wks: gspread.worksheet.Worksheet = None):
         self.display_msg.emit("\n[UNRESTRICTED UPDATE STARTED]")
