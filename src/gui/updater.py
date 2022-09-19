@@ -53,7 +53,11 @@ class Updater(QThread):
             self.mode = 3
 
     def update_3laps(self, wks: gspread.worksheet.Worksheet = None):
-        os.mkdir("tmp")
+        log_out = ""
+        try:
+            os.mkdir("tmp")
+        except:
+            pass
         self.display_msg.emit("\n[3LAPs UPDATE STARTED]")
         if wks == None: 
             wks, feedback = gs.get_worksheet(SERVICE_KEY_FILENAME, GOOGLE_SHEET_KEY, WORKSHEET_NAME)
@@ -66,8 +70,15 @@ class Updater(QThread):
         from_last_gs_update = 0
         for ID, LM in zip(IDs, LMs):
             if self.isInterruptionRequested():
+                with open("log.txt","w") as f:
+                    log_out += "[OPERATION STOPPED]"
+                    f.write(log_out)
                 self.stopped.emit()
-                rmtree("tmp/")
+                gs.set_all_values(wks, full_gs)
+                try:
+                    rmtree("tmp/")
+                except:
+                    pass
                 return -1
             row += 1
             if ID == "noID":
@@ -75,6 +86,7 @@ class Updater(QThread):
                 continue
             elif ID == "":
                 if self.debug_skipped: self.display_msg.emit(f"  [SKIPPING ROW {row+1}] EMPTY ID CELL")
+                log_out += f"  [SKIPPING ROW {row+1}] EMPTY ID CELL\n"
                 continue
             ID, jolly = gs.get_jolly_and_purify_ID(ID)
 
@@ -87,14 +99,22 @@ class Updater(QThread):
                 continue
 
             if self.debug_checked: self.display_msg.emit(f"  [DATA FOUND AT ROW {row+1}] fetching player JSON from Chadsoft...")
+            log_out += f"  [DATA FOUND AT ROW {row+1}] fetching {Player_Name}'s JSON from Chadsoft...\n"
             from_last_gs_update += 1
             player_data = json.loads(cd.get_player_pbs(ID))
             ghosts = player_data["ghosts"]
             gs_row_values = full_gs[row+jolly]
             for g in ghosts:
                 if self.isInterruptionRequested():
+                    with open("log.txt","w") as f:
+                        log_out += "[OPERATION STOPPED]"
+                        f.write(log_out)
                     self.stopped.emit()
-                    rmtree("tmp/")
+                    gs.set_all_values(wks, full_gs)
+                    try:
+                        rmtree("tmp/")
+                    except:
+                        pass
                     return -1   
                 if g["200cc"] == True or g["trackId"] not in list(gs.RT_CATEGORIES.keys()):
                     continue
@@ -106,6 +126,7 @@ class Updater(QThread):
                 gs_track_column = gs.get_track_column(trackId, categoryId)
                 if gs_track_column == "INVALID_TRACK_CATEGORY":
                     if self.debug_ghosts: self.display_msg.emit(f"  [SKIPPING INVALID TRACK CATEGORY] {g['trackName']}; category: {cd.get_category(categoryId)}")
+                    log_out += f"  [SKIPPING INVALID TRACK CATEGORY] {g['trackName']}; category: {cd.get_category(categoryId)}\n"
                     continue
 
                 new_time = g["finishTimeSimple"]
@@ -122,10 +143,15 @@ class Updater(QThread):
                     continue
 
                 new_time = gs.get_timestring_from_timedelta(new_time, categoryId)
+                old_3lap_vid_link = full_gs[row+jolly][gs_track_column+5] # Used to warn about possibly overwriting a TBA video
+                rkg_info = cd.get_ghost_rkg(g["href"])
 
                 if self.debug_ghosts: self.display_msg.emit(f"  (NEW GHOSTS FOUND), {g['trackName']}; category: {cd.get_category(categoryId)}; time: {new_time}, ghost_link: {cd.get_ghost_link(g['href'])}")
+                log_out += f"  (NEW GHOSTS FOUND), {g['trackName']}; category: {cd.get_category(categoryId)}; time: {new_time}, ghost_link: {cd.get_ghost_link(g['href'])}\n"
                 # Modify the values in the full_gs to the ones of the GHOST
-                full_gs[row+jolly][gs_track_column-1] = m2s.genRender(cd.get_ghost_link(g["href"])[:-4]+"rkg")
+                if old_3lap_vid_link != "":self.display_msg.emit(f"      [Old Video Link found] {old_3lap_vid_link}")
+                log_out += f"      [Old Video Link found] {old_3lap_vid_link}\n"
+                full_gs[row+jolly][gs_track_column-1] = m2s.genRender(rkg_info)
                 full_gs[row+jolly][gs_track_column] = new_time
                 full_gs[row+jolly][gs_track_column+1] = "'"+g["dateSet"][:10]
                 full_gs[row+jolly][gs_track_column+3] = "=HYPERLINK(\"" + cd.get_ghost_link(g["href"]) + "\"; \"Sì\")" # Ghost info, taken from chadsoft
@@ -146,6 +172,8 @@ class Updater(QThread):
                 if self.debug_gs_3laps_info: self.display_msg.emit(f"[SUCCESSFUL] UPDATED {self.partial_update_rows} ROWS OF GOOGLE SHEETS, PROCEEDING WITH THE NEXT BLOCK...")
 
         gs.set_all_values(wks, full_gs)
+        with open("log.txt","w") as f:
+            f.write(log_out)
         self.display_msg.emit("\n[3LAPs UPDATE FINISHED]")
 
     def update_unrestricted_and_checks(self, wks: gspread.worksheet.Worksheet = None):
@@ -161,6 +189,7 @@ class Updater(QThread):
         row = 1
         for name in names:
             if self.isInterruptionRequested():
+                gs.set_all_values(wks, full_gs)
                 self.stopped.emit()
                 return -1
             row += 1
@@ -171,6 +200,7 @@ class Updater(QThread):
 
             for trackId, categories in gs.RT_CATEGORIES.items():
                 if self.isInterruptionRequested():
+                    gs.set_all_values(wks, full_gs)
                     self.stopped.emit()
                     return -1
                 track_has_sc_glitch = False
@@ -229,6 +259,7 @@ class Updater(QThread):
         row = 1
         for name in names:
             if self.isInterruptionRequested():
+                gs.set_all_values(wks, full_gs)
                 self.stopped.emit()
                 return -1
             row += 1
@@ -239,6 +270,7 @@ class Updater(QThread):
 
             for trackId, categories in gs.RT_CATEGORIES.items():
                 if self.isInterruptionRequested():
+                    gs.set_all_values(wks, full_gs)
                     self.stopped.emit()
                     return -1
                 track_has_sc_glitch = False
@@ -298,7 +330,10 @@ class Updater(QThread):
 
         if self.isInterruptionRequested():
             self.stopped.emit()
-            rmtree("tmp/")
+            try:
+                rmtree("tmp/")
+            except:
+                pass
             return -1
         
         match self.mode:
