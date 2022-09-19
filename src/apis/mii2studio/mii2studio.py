@@ -2,16 +2,14 @@ from binascii import hexlify
 from os import remove
 from struct import pack
 from apis.mii2studio.gen1_wii import CoreDataWii
-from requests import get
 
-def genRender(rkglink):
+def genRender(rkg_info):
 
     input_file = "tmp/tmp.miigx"
 
-    r = get(rkglink)
     with open(input_file,"wb") as wf:
         # 0xC3 Offset | 0x4A Length | Blocks 0xC3 to 0x85
-        wf.write(r.content[60:60+74])
+        wf.write(rkg_info[60:60+74])
 
     input_type = "wii"
     vecchiofile = "tmp/a"
