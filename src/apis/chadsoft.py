@@ -69,11 +69,12 @@ def get_datetime_from_chadsoft_date(cd_date: str) -> datetime.datetime:
 
     return datetime.datetime(int(cd_date[3]), cd_date[2], int(cd_date[1]), hr_raw[0], hr_raw[1], hr_raw[2])
 
-def get_ghost_mii(ghost: str) -> str:
-    return "https://www.chadsoft.co.uk/time-trials" + ghost[:-3] + "mii"
-
 def get_ghost_link(ghost: str) -> str:
     return "https://www.chadsoft.co.uk/time-trials" + ghost[:-3] + "html"
+
+def get_ghost_rkg(ghost: str) -> str:
+    r = requests.get("https://www.chadsoft.co.uk/time-trials" + ghost[:-3] + "rkg")
+    return r.content 
 
 def get_vehicle(ID: int) -> str:
 
