@@ -215,4 +215,4 @@ def genRender(rkg_info):
         #mii_data_bytes = mii_data_bytes.decode("utf-8")
 
         remove(vecchiofile)
-        return "=IMAGE(\"https://studio.mii.nintendo.com/miis/image.png?data=" + mii_data.decode("utf-8") + "\")"
+        return "=IMAGE(\"https://studio.mii.nintendo.com/miis/image.png?data=" + mii_data.decode("utf-8") + "&type=face&width=512\")"

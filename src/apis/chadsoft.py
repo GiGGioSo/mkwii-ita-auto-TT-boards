@@ -45,6 +45,13 @@ def get_player_last_modified(ID: str, base_url: str = DEFAULT_BASE_URL, url_modi
     time.sleep(TIME_WAIT_AFTER_HEAD)
     return get_datetime_from_chadsoft_date(r.headers["Last-Modified"])
 
+def get_date_from_rkg(rkg_file):
+    rkg_file = "{:08b}".format(int(rkg_file.hex(), 16))
+    year = str(2000 + int(rkg_file[75:82],base=2))
+    month = str(int(rkg_file[82:86],base=2)).zfill(2)
+    day = str(int(rkg_file[86:91],base=2)).zfill(2)
+    return f"{year}-{month}-{day}"
+
 def get_datetime_from_chadsoft_date(cd_date: str) -> datetime.datetime:
     """Transform chadsoft date into a datetime.datetime object
 

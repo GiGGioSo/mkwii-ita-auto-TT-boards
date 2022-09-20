@@ -1,5 +1,6 @@
 import sys
 from PySide6.QtWidgets import QApplication, QStyleFactory
+from shutil import rmtree
 
 from gui import window as win
 
@@ -11,10 +12,13 @@ def main():
         window.show()
         app.exec()
         input("\n\n[SUCCESSFUL] The program terminated without errors. \n\nPress ENTER to exit...")
+        try:
+            rmtree("tmp/")
+        except:
+            pass
     except KeyError as ke:
         print(ke)
         if ke == "last-modified":
             print("------ ERROR ------\nI server di ChadSoft sono down (in tutti i sensi), riprova più tardi.\n------ ----- ------\n")
-
 if __name__ == "__main__":
     main()

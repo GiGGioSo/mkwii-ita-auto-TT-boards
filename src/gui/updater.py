@@ -115,7 +115,7 @@ class Updater(QThread):
                         rmtree("tmp/")
                     except:
                         pass
-                    return -1   
+                    return -1
                 if g["200cc"] == True or g["trackId"] not in list(gs.RT_CATEGORIES.keys()):
                     continue
                 trackId = g["trackId"]
@@ -149,11 +149,12 @@ class Updater(QThread):
                 if self.debug_ghosts: self.display_msg.emit(f"  (NEW GHOSTS FOUND), {g['trackName']}; category: {cd.get_category(categoryId)}; time: {new_time}, ghost_link: {cd.get_ghost_link(g['href'])}")
                 log_out += f"  (NEW GHOSTS FOUND), {g['trackName']}; category: {cd.get_category(categoryId)}; time: {new_time}, ghost_link: {cd.get_ghost_link(g['href'])}\n"
                 # Modify the values in the full_gs to the ones of the GHOST
-                if old_3lap_vid_link != "":self.display_msg.emit(f"      [Old Video Link found] {old_3lap_vid_link}")
-                log_out += f"      [Old Video Link found] {old_3lap_vid_link}\n"
+                if old_3lap_vid_link != "":
+                    self.display_msg.emit(f"      [Old Video Link found] {old_3lap_vid_link}")
+                    log_out += f"      [OLD VIDEO LINK FOUND] {old_3lap_vid_link}\n"
                 full_gs[row+jolly][gs_track_column-1] = m2s.genRender(rkg_info)
                 full_gs[row+jolly][gs_track_column] = new_time
-                full_gs[row+jolly][gs_track_column+1] = "'"+g["dateSet"][:10]
+                full_gs[row+jolly][gs_track_column+1] = cd.get_date_from_rkg(rkg_info)
                 full_gs[row+jolly][gs_track_column+3] = "=HYPERLINK(\"" + cd.get_ghost_link(g["href"]) + "\"; \"Sì\")" # Ghost info, taken from chadsoft
                 full_gs[row+jolly][gs_track_column+5] = ""
                 full_gs[row+jolly][gs_track_column+7] = cd.get_driver(g["driverId"])
