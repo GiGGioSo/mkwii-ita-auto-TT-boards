@@ -11,11 +11,11 @@ def main():
         window = win.MainWindow()
         window.show()
         app.exec()
-        input("\n\n[SUCCESSFUL] The program terminated without errors. \n\nPress ENTER to exit...")
         try:
             rmtree("tmp/")
         except:
             pass
+        input("\n\n[SUCCESSFUL] The program terminated without errors. \n\nPress ENTER to exit...")
     except KeyError as ke:
         print(ke)
         if ke == "last-modified":

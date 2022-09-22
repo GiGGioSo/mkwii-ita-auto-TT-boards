@@ -52,6 +52,37 @@ class Updater(QThread):
         else:
             self.mode = 3
 
+    def update_flaps(self, wks: gspread.worksheet.Worksheet = None):
+        log_out = ""
+        try:
+            os.mkdir("tmp")
+        except:
+            pass
+        self.display_msg.emit("\n[FLAPs UPDATE STARTED]")
+        if wks == None: 
+            wks, feedback = gs.get_worksheet(SERVICE_KEY_FILENAME, GOOGLE_SHEET_KEY, WORKSHEET_NAME)
+            if feedback and self.debug_gs_3laps_info:
+                self.display_msg.emit(feedback)
+        full_gs = gs.get_all_values(wks)
+        IDs = [i[gs.ID_COLUMN] for i in full_gs[2:]]
+        row = 1 #Current row
+        Tracks =
+        from_last_gs_update = 0
+        for Track in Tracks:
+            for ID in IDs:
+                if self.isInterruptionRequested():
+                    with open("log.txt","w") as f:
+                        log_out += "[OPERATION STOPPED]"
+                        f.write(log_out)
+                    self.stopped.emit()
+                    gs.set_all_values(wks, full_gs)
+                    try:
+                        rmtree("tmp/")
+                    except:
+                        pass
+                    return -1
+                row += 1
+
     def update_3laps(self, wks: gspread.worksheet.Worksheet = None):
         log_out = ""
         try:

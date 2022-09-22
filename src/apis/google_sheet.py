@@ -16,6 +16,33 @@ CHECK_FULL_FLAP_UNRESTRICTED_COLUMN = 4
 ID_COLUMN = 5
 LAST_MODIFIED_COLUMN = 6
 
+GLITCH_ID = "01"
+NORMAL_ID_C1 = "00"
+NORMAL_ID_C2 = "02"
+SHORTCUT_ID_C1 = "00"
+SHORTCUT_ID_C2 = "02"
+NORMAL_AND_SC_ID = "18"
+
+#   Categories: Normal
+#   ID          | 00
+#
+#   Categories: Normal, Shortcut
+#   Normal ID   | 00
+#   Shortcut ID | 02
+#
+#   Categories: Normal, Glitch
+#   Normal ID   | 00
+#   Glitch ID   | 01
+#
+#   Categories: Normal, Shortcut, Glitch
+#   Normal ID   | 02
+#   Shortcut ID | 00
+#   Glitch ID   | 01
+#
+#   If we mix Normal and SC, we kept 18 as the custom ID because of legacy reasons, plus this way we make sure we won't have issues overlapping actual IDs.
+#
+#   It makes no sense but we gotta deal with it.
+
 RT_CATEGORIES = {
     "1AE1A7D894960B38E09E7494373378D87305A163": [-1],        # LC                   Circuito di Luigi
     "90720A7D57A7C76E2347782F6BDE5D22342FB7DD": [-1],        # MMM                  Prateria verde

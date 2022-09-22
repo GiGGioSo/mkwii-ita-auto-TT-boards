@@ -37,8 +37,8 @@ class MainWindow(QMainWindow):
         self.google_sheets_3laps_check.setChecked(True)
         ## partial update rows spinbox
         self.partial_update_rows_box = QSpinBox()
-        self.partial_update_rows_box.setMinimum(3)
-        self.partial_update_rows_box.setMaximum(3333)
+        self.partial_update_rows_box.setMinimum(1)
+        self.partial_update_rows_box.setMaximum(1636)
         self.partial_update_rows_box.setValue(10)
         self.partial_update_rows_label = QLabel("Partial update rows:")
         self.partial_update_rows_layout = QHBoxLayout()
