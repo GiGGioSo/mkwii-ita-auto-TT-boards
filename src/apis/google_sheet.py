@@ -16,12 +16,28 @@ CHECK_FULL_FLAP_UNRESTRICTED_COLUMN = 4
 ID_COLUMN = 5
 LAST_MODIFIED_COLUMN = 6
 
-GLITCH_ID = "01"
-NORMAL_ID_C1 = "00"
-NORMAL_ID_C2 = "02"
-SHORTCUT_ID_C1 = "00"
-SHORTCUT_ID_C2 = "02"
-NORMAL_AND_SC_ID = "18"
+CATEGORY_IDS =  {
+    "Case_Normal" : {
+        "Normal_ID" : "00"
+    },
+    "Case_Normal_Shortcut" : {
+        "Normal_ID" : "00",
+        "Shortcut_ID" : "02"
+    },
+    "Case_Normal_Glitch" : {
+        "Normal_ID" : "00",
+        "Glitch_ID" : "01"
+    },
+    "Case_Normal_Shortcut_Glitch" : {
+        "Normal_ID" : "02",
+        "Shortcut_ID" : "00",
+        "Glitch_ID" : "01"
+    },
+    "Case_Mix_Shortcut+Normal_Glitch" : {
+        "Mixed_ID" : "18",
+        "Glitch_ID" : "01"
+    }
+}
 
 #   Categories: Normal
 #   ID          | 00
