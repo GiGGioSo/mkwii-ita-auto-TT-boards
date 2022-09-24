@@ -16,29 +16,16 @@ CHECK_FULL_FLAP_UNRESTRICTED_COLUMN = 4
 ID_COLUMN = 5
 LAST_MODIFIED_COLUMN = 6
 
-CATEGORY_IDS =  {
-    "Case_Normal" : {
-        "Normal_ID" : "00"
-    },
-    "Case_Normal_Shortcut" : {
-        "Normal_ID" : "00",
-        "Shortcut_ID" : "02"
-    },
-    "Case_Normal_Glitch" : {
-        "Normal_ID" : "00",
-        "Glitch_ID" : "01"
-    },
-    "Case_Normal_Shortcut_Glitch" : {
-        "Normal_ID" : "02",
-        "Shortcut_ID" : "00",
-        "Glitch_ID" : "01"
-    },
-    "Case_Mix_Shortcut+Normal_Glitch" : {
-        "Mixed_ID" : "18",
-        "Glitch_ID" : "01"
-    }
+CATEGORY_IDS = {
+    "Case_Normal" :                     ["00"],
+    "Case_Normal_Shortcut" :            ["00","02"],
+    "Case_Normal_Glitch" :              ["00","01"],
+    "Case_Normal_Shortcut_Glitch" :     ["02","00","01"],
+    "Case_Mix_Shortcut+Normal_Glitch" : ["18","01"],
 }
 
+#   Categories are always ordered as No-SC > SC > Glitch
+#
 #   Categories: Normal
 #   ID          | 00
 #
@@ -58,6 +45,9 @@ CATEGORY_IDS =  {
 #   If we mix Normal and SC, we kept 18 as the custom ID because of legacy reasons, plus this way we make sure we won't have issues overlapping actual IDs.
 #
 #   It makes no sense but we gotta deal with it.
+
+
+# Gotta Change this one to adapt to the new system soon.
 
 RT_CATEGORIES = {
     "1AE1A7D894960B38E09E7494373378D87305A163": [-1],        # LC                   Circuito di Luigi
