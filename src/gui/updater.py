@@ -1,7 +1,10 @@
 import json
 import datetime
+from operator import index
+from textwrap import indent
 import gspread
 import os
+import json
 import time
 from PySide6.QtCore import QThread, Signal
 from shutil import rmtree
@@ -61,41 +64,39 @@ class Updater(QThread):
             os.mkdir("tmp")
         except:
             pass
-        self.display_msg.emit("\n[FLAPs UPDATE STARTED]")
+        self.display_msg.emit("[FLAPs UPDATE STARTED]")
         if wks == None: 
             wks, feedback = gs.get_worksheet(SERVICE_KEY_FILENAME, GOOGLE_SHEET_KEY, WORKSHEET_NAME)
             if feedback and self.debug_gs_3laps_info:
                 self.display_msg.emit(feedback)
         full_gs = gs.get_all_values(wks)
         IDs = [i[gs.ID_COLUMN] for i in full_gs[2:]]
-        Tracks = list(RT_TRACKS.keys())
+        tracks = list(RT_TRACKS.keys())
         from_last_gs_update = 0
-        for track_link in Tracks:
+        gs_track_column = 2 + gs.GS_START_INDEX
+        for track_link in tracks:
+            cat_n = 0
             category_ids = RT_TRACKS[track_link]
             for category_id in category_ids:
                 row = 1 #Current row
                 start_time = time.time()
-                self.display_msg.emit("\nConnecting to Chadsoft...")
-                track_lb = str(cd.get_leaderboard_page(track_link,category_id,flap=True))
-                track_name_character_start = track_lb.find("\"name\"")+9
-                track_name_character_end = track_lb.find("\",\"authors\"")
-                track_name = track_lb[track_name_character_start:track_name_character_end]
-                self.display_msg.emit(f"\nConnected to the {track_name} leaderboard in {time.time()-start_time}.\n\n")
+                self.display_msg.emit("Connecting to Chadsoft...")
+                if track_link == "02/0E380357AFFCFD8722329994885699D9927F8276/" and category_id == "00":
+                    gs_track_column = gs_track_column - gs.GS_TRACKS_INTERVAL
+                    cat_n = cat_n -1
+                print(gs_track_column)
+                if self.isInterruptionRequested():
+                    self.stopped.emit()
+                    try:
+                        rmtree("tmp/")
+                    except:
+                        pass
+                    return -1
+                track_lb = cd.get_leaderboard_page(track_link,category_id,flap=True) # Could do Async requests or put the requests on another thread but Chadsoft.co.uk is too bad of a site for it to work properly
+                track_name = track_lb["name"]
+                track_lb = track_lb["ghosts"]
+                self.display_msg.emit(f"Connected to the {track_name} leaderboard in {time.time()-start_time}.")
                 for ID in IDs:
-                    row += 1
-                    if ID == "noID":
-                        if self.debug_skipped: self.display_msg.emit(f"[SKIPPING ROW {row+1}] NO ID") # +1 for the Spreadsheet's offset
-                        continue
-                    elif ID == "":
-                        if self.debug_skipped: self.display_msg.emit(f"  [SKIPPING ROW {row+1}] EMPTY ID CELL")
-                        log_out += f"  [SKIPPING ROW {row+1}] EMPTY ID CELL\n"
-                        continue
-                    ID, jolly = gs.get_jolly_and_purify_ID(ID)
-
-                    Player_Name = full_gs[row][0]
-                    if self.debug_checked: self.display_msg.emit(f"[CHECKING ROW {row+1}] Player Name: {Player_Name}, ID: {ID}")
-
-                    self.display_msg.emit("\n")
                     if self.isInterruptionRequested():
                         self.stopped.emit()
                         try:
@@ -103,11 +104,34 @@ class Updater(QThread):
                         except:
                             pass
                         return -1
+
+                    ID, jolly = gs.get_jolly_and_purify_ID(ID)
+
                     row += 1
-                    position_in_lb = track_lb.find(f"\"playerId\":\"{ID}\"")
-                    if position_in_lb == -1:
+
+                    if ID == "noID":
+                        # if self.debug_skipped: self.display_msg.emit(f"[SKIPPING ROW {row+1}] NO ID") # +1 for the Spreadsheet's offset
                         continue
-                    new_time = track_lb[position_in_lb+82:position_in_lb+91]
+                    elif ID == "":
+                        # if self.debug_skipped: self.display_msg.emit(f"  [SKIPPING ROW {row+1}] EMPTY ID CELL")
+                        log_out += f"  [SKIPPING ROW {row}] EMPTY ID CELL\n"
+                        continue
+
+                    Player_Name = full_gs[row][0]
+                    # if self.debug_checked: self.display_msg.emit(f"[CHECKING ROW {row+1}] Player Name: {Player_Name}, ID: {ID}")
+                    try:
+                        player_info = [x for x in track_lb if x["playerId"]==ID][0]
+                    except:
+                        continue
+
+                    if self.isInterruptionRequested():
+                        self.stopped.emit()
+                        try:
+                            rmtree("tmp/")
+                        except:
+                            pass
+                        return -1
+                    new_time = player_info["bestSplitSimple"]
                     new_time = gs.get_timedelta_from_timestring(new_time)
                     gs_row_values = full_gs[row+jolly]
                     try:
@@ -116,17 +140,27 @@ class Updater(QThread):
                     except:
                         old_time = datetime.timedelta()
                     if not (old_time == datetime.timedelta() 
-                        or (full_gs[row+jolly][gs_track_column+3] in ["TBA", "No"] and new_time <= old_time) 
-                        or (full_gs[row+jolly][gs_track_column+3] not in ["TBA", "No"] and new_time < old_time)):
+                        or (full_gs[row+jolly][gs_track_column+2] in ["TBA", "No"] and new_time <= old_time) 
+                        or (full_gs[row+jolly][gs_track_column+2] not in ["TBA", "No"] and new_time < old_time)):
                             continue
-                    new_link = f"=HYPERLINK(\"https://chadsoft.co.uk/time-trials/rkgd/{track_lb[position_in_lb-165:position_in_lb-123]}.html\";\"Sì\""
-                    print(position_in_lb)
-                    print(new_link)
-                    print(track_lb[position_in_lb:position_in_lb+100])
-                    print(new_time)
-                    print(old_time)
-                    time.sleep(400)
-    # Fine Codice Flap
+                    new_time = gs.get_timestring_from_timedelta_2(new_time,cat_n)
+                    new_link = "=HYPERLINK(\"https://chadsoft.co.uk/time-trials/rkgd/" + player_info["href"][:4] + "html\";\"Sì\")"
+                    old_flap_vid_link = full_gs[row+jolly][gs_track_column+4] # Used to warn about possibly overwriting a TBA video
+                    time.sleep(1000)
+                    if old_flap_vid_link != "":
+                        self.display_msg.emit(f"      [Old Video Link found] {old_flap_vid_link}")
+                        log_out += f"      [OLD VIDEO LINK FOUND] {old_flap_vid_link}\n"
+                    full_gs[row+jolly][gs_track_column] = new_time
+                    full_gs[row+jolly][gs_track_column+2] = new_link
+                    full_gs[row+jolly][gs_track_column+4] = ""
+                gs_track_column += 11
+                cat_n += 1
+            gs.set_all_values(wks, full_gs)
+            full_gs = gs.get_all_values(wks)
+            if self.debug_gs_3laps_info: self.display_msg.emit(f"[SUCCESSFUL] UPDATED {track_name}, PROCEEDING WITH THE NEXT BLOCK...")
+            with open("log.txt","w") as f:
+                f.write(log_out)
+        if self.debug_gs_3laps_info: self.display_msg.emit("[FLAPS UPDATE FINISHED]")
 
     def update_3laps(self, wks: gspread.worksheet.Worksheet = None): 
         log_out = ""

@@ -13,38 +13,38 @@ DEFAULT_BASE_URL = "https://tt.chadsoft.co.uk/"
 DEFAULT_URL_MODIFIERS = "?times=pb" #To get only the PBs
 
 RT_TRACKS = {
-    "08/1AE1A7D894960B38E09E7494373378D87305A163/": CATEGORY_IDS["Case_Normal"],                     # LC                 Circuito di Luigi
-    "01/90720A7D57A7C76E2347782F6BDE5D22342FB7DD/": CATEGORY_IDS["Case_Normal"],                     # MMM                Prateria verde
-    "02/0E380357AFFCFD8722329994885699D9927F8276/": CATEGORY_IDS["Case_Mix_Shortcut+Normal_Glitch"], # MG    (NO-SC+SC/G) Gola Fungo
-    "04/1896AEA49617A571C66FF778D8F2ABBE9E5D7479/": CATEGORY_IDS["Case_Normal_Shortcut"],            # TF    (NO-SC/SC)   Fabbrica di Toad
-    "00/7752BB51EDBC4A95377C0A05B0E0DA1503786625/": CATEGORY_IDS["Case_Normal_Glitch"],              # MC    (NO-SC/G)    Circuito di Mario
-    "05/E4BF364CB0C5899907585D731621CA930A4EF85C/": CATEGORY_IDS["Case_Normal_Shortcut_Glitch"],     # CM    (NO-SC/SC/G) Outlet Cocco
-    "06/B02ED72E00B400647BDA6845BE387C47D251F9D1/": CATEGORY_IDS["Case_Normal"],                     # DKSC               Pista Snowboard DK
-    "07/D1A453B43D6920A78565E65A4597E353B177ABD0/": CATEGORY_IDS["Case_Normal_Glitch"],              # WGM   (NO-SC/G)    Miniera d'oro di Wario
-    "09/72D0241C75BE4A5EBD242B9D8D89B1D6FD56BE8F/": CATEGORY_IDS["Case_Normal"],                     # DC                 Circuito di Daisy
-    "0F/52F01AE3AED1E0FA4C7459A648494863E83A548C/": CATEGORY_IDS["Case_Normal_Glitch"],              # KC    (NO-SC/G)    Punta Koopa
-    "0B/48EBD9D64413C2B98D2B92E5EFC9B15ECD76FEE6/": CATEGORY_IDS["Case_Normal_Glitch"],              # MT    (NO-SC/G)    Pista degli aceri
-    "03/ACC0883AE0CE7879C6EFBA20CFE5B5909BF7841B/": CATEGORY_IDS["Case_Normal_Shortcut_Glitch"],     # GV    (NO-SC/SC/G) Vulcano brontolone
-    "0E/38486C4F706395772BD988C1AC5FA30D27CAE098/": CATEGORY_IDS["Case_Normal"],                     # DDR                Rovine desertiche
-    "0A/B13C515475D7DA207DFD5BADD886986147B906FF/": CATEGORY_IDS["Case_Normal"],                     # MH                 Autostrada lunare
-    "0C/B9821B14A89381F9C015669353CB24D7DB1BB25D/": CATEGORY_IDS["Case_Normal_Shortcut"],            # BC    (NO-SC/SC)   Castello di Bowser
-    "0D/FFE518915E5FAAA889057C8A3D3E439868574508/": CATEGORY_IDS["Case_Normal_Glitch"],              # RR    (NO-SC/G)    Pista Arcobaleno
-    "10/8014488A60F4428EEF52D01F8C5861CA9565E1CA/": CATEGORY_IDS["Case_Normal_Glitch"],              # rPB   (NO-SC/G)    GCN Spiaggia di Peach
-    "14/8C854B087417A92425110CC71E23C944D6997806/": CATEGORY_IDS["Case_Normal"],                     # rYF                DS Cascate di Yoshi
-    "19/071D697C4DDB66D3B210F36C7BF878502E79845B/": CATEGORY_IDS["Case_Normal_Glitch"],              # rGV2  (NO-SC/G)    SNES Valle fantasma 2
-    "1A/49514E8F74FEA50E77273C0297086D67E58123E8/": CATEGORY_IDS["Case_Normal"],                     # rMR                N64 Pista di Mario
-    "1B/BA9BCFB3731A6CB17DBA219A8D37EA4D52332256/": CATEGORY_IDS["Case_Normal_Glitch"],              # rSL   (NO-SC/G)    N64 Circuito Gelato
-    "1F/E8ED31605CC7D6660691998F024EED6BA8B4A33F/": CATEGORY_IDS["Case_Normal_Glitch"],              # rSGB  (NO-SC/G)    GBA Spiaggia Tipo Timido
-    "17/BC038E163D21D9A1181B60CF90B4D03EFAD9E0C5/": CATEGORY_IDS["Case_Normal"],                     # rDS                DS Borgo Delfino
-    "12/418099824AF6BF1CD7F8BB44F61E3A9CC3007DAE/": CATEGORY_IDS["Case_Normal_Glitch"],              # rWS   (NO-SC/G)    GCN Stadio di Waluigi
-    "15/4EC538065FDC8ACF49674300CBDEC5B80CC05A0D/": CATEGORY_IDS["Case_Normal_Shortcut"],            # rDH   (NO-SC/SC)   DS Deserto Picchiasol
-    "1E/A4BEA41BE83D816F793F3FAD97D268F71AD99BF9/": CATEGORY_IDS["Case_Normal_Shortcut"],            # rBC3  (NO-SC/SC)   GBA Castello di Bowser 3
-    "1D/692D566B05434D8C66A55BDFF486698E0FC96095/": CATEGORY_IDS["Case_Normal_Glitch"],              # rDKJP (NO-SC/SC/G) N64 Viale Giungla DK
-    "11/1941A29AD2E7B7BBA8A29E6440C95EF5CF76B01D/": CATEGORY_IDS["Case_Normal_Shortcut"],            # rMC   (NO-SC/SC)   GCN Circuito di Mario
-    "18/077111B996E5C4F47D20EC29C2938504B53A8E76/": CATEGORY_IDS["Case_Normal"],                     # rMC3               SNES Circuito di Mario 3
-    "16/F9A62BEF04CC8F499633E4023ACC7675A92771F0/": CATEGORY_IDS["Case_Normal"],                     # rPG                DS Giardino di Peach
-    "13/B036864CF0016BE0581449EF29FB52B2E58D78A4/": CATEGORY_IDS["Case_Normal_Shortcut"],            # rDKM  (NO-SC/SC)   GCN Montagne DK
-    "1C/15B303B288F4707E5D0AF28367C8CE51CDEAB490/": CATEGORY_IDS["Case_Normal_Glitch"],              # rBC   (NO-SC/G)    N64 Castello di Bowser
+    "08/1AE1A7D894960B38E09E7494373378D87305A163/": CATEGORY_IDS["Case_Normal"],                 # LC                 Circuito di Luigi
+    "01/90720A7D57A7C76E2347782F6BDE5D22342FB7DD/": CATEGORY_IDS["Case_Normal"],                 # MMM                Prateria verde
+    "02/0E380357AFFCFD8722329994885699D9927F8276/": CATEGORY_IDS["Case_Normal_Shortcut_Glitch"], # MG    (NO-SC+SC/G) Gola Fungo
+    "04/1896AEA49617A571C66FF778D8F2ABBE9E5D7479/": CATEGORY_IDS["Case_Normal_Shortcut"],        # TF    (NO-SC/SC)   Fabbrica di Toad
+    "00/7752BB51EDBC4A95377C0A05B0E0DA1503786625/": CATEGORY_IDS["Case_Normal_Glitch"],          # MC    (NO-SC/G)    Circuito di Mario
+    "05/E4BF364CB0C5899907585D731621CA930A4EF85C/": CATEGORY_IDS["Case_Normal_Shortcut_Glitch"], # CM    (NO-SC/SC/G) Outlet Cocco
+    "06/B02ED72E00B400647BDA6845BE387C47D251F9D1/": CATEGORY_IDS["Case_Normal"],                 # DKSC               Pista Snowboard DK
+    "07/D1A453B43D6920A78565E65A4597E353B177ABD0/": CATEGORY_IDS["Case_Normal_Glitch"],          # WGM   (NO-SC/G)    Miniera d'oro di Wario
+    "09/72D0241C75BE4A5EBD242B9D8D89B1D6FD56BE8F/": CATEGORY_IDS["Case_Normal"],                 # DC                 Circuito di Daisy
+    "0F/52F01AE3AED1E0FA4C7459A648494863E83A548C/": CATEGORY_IDS["Case_Normal_Glitch"],          # KC    (NO-SC/G)    Punta Koopa
+    "0B/48EBD9D64413C2B98D2B92E5EFC9B15ECD76FEE6/": CATEGORY_IDS["Case_Normal_Glitch"],          # MT    (NO-SC/G)    Pista degli aceri
+    "03/ACC0883AE0CE7879C6EFBA20CFE5B5909BF7841B/": CATEGORY_IDS["Case_Normal_Shortcut_Glitch"], # GV    (NO-SC/SC/G) Vulcano brontolone
+    "0E/38486C4F706395772BD988C1AC5FA30D27CAE098/": CATEGORY_IDS["Case_Normal"],                 # DDR                Rovine desertiche
+    "0A/B13C515475D7DA207DFD5BADD886986147B906FF/": CATEGORY_IDS["Case_Normal"],                 # MH                 Autostrada lunare
+    "0C/B9821B14A89381F9C015669353CB24D7DB1BB25D/": CATEGORY_IDS["Case_Normal_Shortcut"],        # BC    (NO-SC/SC)   Castello di Bowser
+    "0D/FFE518915E5FAAA889057C8A3D3E439868574508/": CATEGORY_IDS["Case_Normal_Glitch"],          # RR    (NO-SC/G)    Pista Arcobaleno
+    "10/8014488A60F4428EEF52D01F8C5861CA9565E1CA/": CATEGORY_IDS["Case_Normal_Glitch"],          # rPB   (NO-SC/G)    GCN Spiaggia di Peach
+    "14/8C854B087417A92425110CC71E23C944D6997806/": CATEGORY_IDS["Case_Normal"],                 # rYF                DS Cascate di Yoshi
+    "19/071D697C4DDB66D3B210F36C7BF878502E79845B/": CATEGORY_IDS["Case_Normal_Glitch"],          # rGV2  (NO-SC/G)    SNES Valle fantasma 2
+    "1A/49514E8F74FEA50E77273C0297086D67E58123E8/": CATEGORY_IDS["Case_Normal"],                 # rMR                N64 Pista di Mario
+    "1B/BA9BCFB3731A6CB17DBA219A8D37EA4D52332256/": CATEGORY_IDS["Case_Normal_Glitch"],          # rSL   (NO-SC/G)    N64 Circuito Gelato
+    "1F/E8ED31605CC7D6660691998F024EED6BA8B4A33F/": CATEGORY_IDS["Case_Normal_Glitch"],          # rSGB  (NO-SC/G)    GBA Spiaggia Tipo Timido
+    "17/BC038E163D21D9A1181B60CF90B4D03EFAD9E0C5/": CATEGORY_IDS["Case_Normal"],                 # rDS                DS Borgo Delfino
+    "12/418099824AF6BF1CD7F8BB44F61E3A9CC3007DAE/": CATEGORY_IDS["Case_Normal_Glitch"],          # rWS   (NO-SC/G)    GCN Stadio di Waluigi
+    "15/4EC538065FDC8ACF49674300CBDEC5B80CC05A0D/": CATEGORY_IDS["Case_Normal_Shortcut"],        # rDH   (NO-SC/SC)   DS Deserto Picchiasol
+    "1E/A4BEA41BE83D816F793F3FAD97D268F71AD99BF9/": CATEGORY_IDS["Case_Normal_Shortcut"],        # rBC3  (NO-SC/SC)   GBA Castello di Bowser 3
+    "1D/692D566B05434D8C66A55BDFF486698E0FC96095/": CATEGORY_IDS["Case_Normal_Glitch"],          # rDKJP (NO-SC/SC/G) N64 Viale Giungla DK
+    "11/1941A29AD2E7B7BBA8A29E6440C95EF5CF76B01D/": CATEGORY_IDS["Case_Normal_Shortcut"],        # rMC   (NO-SC/SC)   GCN Circuito di Mario
+    "18/077111B996E5C4F47D20EC29C2938504B53A8E76/": CATEGORY_IDS["Case_Normal"],                 # rMC3               SNES Circuito di Mario 3
+    "16/F9A62BEF04CC8F499633E4023ACC7675A92771F0/": CATEGORY_IDS["Case_Normal"],                 # rPG                DS Giardino di Peach
+    "13/B036864CF0016BE0581449EF29FB52B2E58D78A4/": CATEGORY_IDS["Case_Normal_Shortcut"],        # rDKM  (NO-SC/SC)   GCN Montagne DK
+    "1C/15B303B288F4707E5D0AF28367C8CE51CDEAB490/": CATEGORY_IDS["Case_Normal_Glitch"],          # rBC   (NO-SC/G)    N64 Castello di Bowser
 }
 
 ### Values meaning of categoryId ###
@@ -64,7 +64,7 @@ def get_leaderboard_page(track_link:str,category_id:str,flap:bool):
         flap = ""
     base_url = "https://tt.chadsoft.co.uk/leaderboard/"
     r = requests.get(base_url+track_link+category_id+flap+".json?times=pb")
-    return r.text
+    return r.json()
 
 def get_player_pbs(ID: str, base_url: str = DEFAULT_BASE_URL, url_modifiers: str = DEFAULT_URL_MODIFIERS) -> str:
     """Make a GET request to chadsoft API to fetch info about a certain ID.

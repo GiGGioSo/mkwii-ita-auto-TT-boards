@@ -21,7 +21,6 @@ CATEGORY_IDS = {
     "Case_Normal_Shortcut" :            ["00","02"],
     "Case_Normal_Glitch" :              ["00","01"],
     "Case_Normal_Shortcut_Glitch" :     ["02","00","01"],
-    "Case_Mix_Shortcut+Normal_Glitch" : ["18","01"],
 }
 
 #   Categories are always ordered as No-SC > SC > Glitch
@@ -41,8 +40,6 @@ CATEGORY_IDS = {
 #   Normal ID   | 02
 #   Shortcut ID | 00
 #   Glitch ID   | 01
-#
-#   If we mix Normal and SC, we kept 18 as the custom ID because of legacy reasons, plus this way we make sure we won't have issues overlapping actual IDs.
 #
 #   It makes no sense but we gotta deal with it.
 
@@ -123,6 +120,16 @@ def get_timedelta_from_timestring(time: str) -> datetime.timedelta:
 def get_timestring_from_timedelta(time: datetime.timedelta, categoryId: int) -> str:
     time = str(time).split(':')[1:]
     if categoryId not in [-1, 0, 2, 18]: jolly = "°"
+    else: jolly = ""
+    if len(time[1]) == 2:
+        time[1] += ".000"
+        return f"{time[0]}:{time[1]}{jolly}"
+    else:
+        return f"{time[0]}:{time[1][:-3]}{jolly}"
+
+def get_timestring_from_timedelta_2(time: datetime.timedelta, cat: int) -> str:
+    time = str(time).split(':')[1:]
+    if cat > 0: jolly = "°"
     else: jolly = ""
     if len(time[1]) == 2:
         time[1] += ".000"
