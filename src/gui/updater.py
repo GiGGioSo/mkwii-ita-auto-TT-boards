@@ -13,7 +13,6 @@ from apis.mii2studio import mii2studio as m2s
 from apis import google_sheet as gs
 from apis import chadsoft as cd
 from apis.chadsoft import RT_TRACKS
-from apis.chadsoft import RT_CATEGORIES
 
 SERVICE_KEY_FILENAME = "mkwii-ita-auto-tt-service-key.json"
 GOOGLE_SHEET_KEY = "1pzvXA5NeHaqgaUe5ft_d4TauEbX9lVFxVp3dM51HsuA"
@@ -65,18 +64,31 @@ class Updater(QThread):
         except:
             pass
         self.display_msg.emit("[FLAPs UPDATE STARTED]")
+        total_time = 0
         if wks == None: 
             wks, feedback = gs.get_worksheet(SERVICE_KEY_FILENAME, GOOGLE_SHEET_KEY, WORKSHEET_NAME)
             if feedback and self.debug_gs_3laps_info:
                 self.display_msg.emit(feedback)
         full_gs = gs.get_all_values(wks)
+        gs_track_column = 2 + gs.GS_START_INDEX
+        
+        start_offset = 27
+        
         IDs = [i[gs.ID_COLUMN] for i in full_gs[2:]]
         tracks = list(RT_TRACKS.keys())
         from_last_gs_update = 0
-        gs_track_column = 2 + gs.GS_START_INDEX
+
+        while start_offset > 0: # reminder: do -1 for user input 
+            print(str(gs_track_column) + " | https://chadsoft.co.uk/time-trials/leaderboard/" + tracks[0] + "00-fast-lap.html")
+            gs_track_column += gs.GS_TRACKS_INTERVAL * len(RT_TRACKS[tracks[0]])
+            if start_offset==3:
+                gs_track_column = gs_track_column - gs.GS_TRACKS_INTERVAL
+            start_offset = start_offset -1           
+            tracks.pop(0)     
+
         for track_link in tracks:
-            cat_n = 0
             category_ids = RT_TRACKS[track_link]
+            cat_n = 0
             for category_id in category_ids:
                 row = 1 #Current row
                 start_time = time.time()
@@ -84,7 +96,7 @@ class Updater(QThread):
                 if track_link == "02/0E380357AFFCFD8722329994885699D9927F8276/" and category_id == "00":
                     gs_track_column = gs_track_column - gs.GS_TRACKS_INTERVAL
                     cat_n = cat_n -1
-                print(gs_track_column)
+                print(str(gs_track_column) + " | " + full_gs[0][gs_track_column-2])
                 if self.isInterruptionRequested():
                     self.stopped.emit()
                     try:
@@ -96,6 +108,7 @@ class Updater(QThread):
                 track_name = track_lb["name"]
                 track_lb = track_lb["ghosts"]
                 self.display_msg.emit(f"Connected to the {track_name} leaderboard in {time.time()-start_time}.")
+                start_time_local = time.time()
                 for ID in IDs:
                     if self.isInterruptionRequested():
                         self.stopped.emit()
@@ -140,20 +153,22 @@ class Updater(QThread):
                     except:
                         old_time = datetime.timedelta()
                     if not (old_time == datetime.timedelta() 
-                        or (full_gs[row+jolly][gs_track_column+2] in ["TBA", "No"] and new_time <= old_time) 
-                        or (full_gs[row+jolly][gs_track_column+2] not in ["TBA", "No"] and new_time < old_time)):
+                        or (full_gs[row+jolly][gs_track_column+2] in ["TBA", "", "No"] and new_time <= old_time) 
+                        or (full_gs[row+jolly][gs_track_column+2] not in ["TBA", "", "No"] and new_time < old_time)):
                             continue
                     new_time = gs.get_timestring_from_timedelta_2(new_time,cat_n)
-                    new_link = "=HYPERLINK(\"https://chadsoft.co.uk/time-trials/rkgd/" + player_info["href"][:4] + "html\";\"Sì\")"
+                    new_link = "=HYPERLINK(\"https://chadsoft.co.uk/time-trials" + player_info["href"][:-3] + "html\";\"Sì\")"
                     old_flap_vid_link = full_gs[row+jolly][gs_track_column+4] # Used to warn about possibly overwriting a TBA video
-                    time.sleep(1000)
                     if old_flap_vid_link != "":
                         self.display_msg.emit(f"      [Old Video Link found] {old_flap_vid_link}")
                         log_out += f"      [OLD VIDEO LINK FOUND] {old_flap_vid_link}\n"
                     full_gs[row+jolly][gs_track_column] = new_time
                     full_gs[row+jolly][gs_track_column+2] = new_link
                     full_gs[row+jolly][gs_track_column+4] = ""
-                gs_track_column += 11
+                self.display_msg.emit(f"{track_name} took {time.time()-start_time_local} to update")
+                total_time += time.time()-start_time
+                self.display_msg.emit(f"Total Time Elapsed: {total_time}")
+                gs_track_column += gs.GS_TRACKS_INTERVAL
                 cat_n += 1
             gs.set_all_values(wks, full_gs)
             full_gs = gs.get_all_values(wks)
@@ -162,7 +177,7 @@ class Updater(QThread):
                 f.write(log_out)
         if self.debug_gs_3laps_info: self.display_msg.emit("[FLAPS UPDATE FINISHED]")
 
-    def update_3laps(self, wks: gspread.worksheet.Worksheet = None): 
+    def update_3laps(self, wks: gspread.worksheet.Worksheet = None):
         log_out = ""
         try:
             os.mkdir("tmp")
