@@ -73,8 +73,14 @@ class Updater(QThread):
         gs_track_column = 2 + gs.GS_START_INDEX
         
         start_offset = 27
-        
+   
         IDs = [i[gs.ID_COLUMN] for i in full_gs[2:]]
+        filtered_IDs_tuples = list(map(gs.get_jolly_and_purify_ID,filter(lambda x: x!="noID",IDs)))
+        id_jolly = []
+        filtered_IDs = []
+        for i in filtered_IDs_tuples:
+            filtered_IDs.append(i[0])
+            id_jolly.append(i[1])
         tracks = list(RT_TRACKS.keys())
         from_last_gs_update = 0
 
@@ -96,7 +102,6 @@ class Updater(QThread):
                 if track_link == "02/0E380357AFFCFD8722329994885699D9927F8276/" and category_id == "00":
                     gs_track_column = gs_track_column - gs.GS_TRACKS_INTERVAL
                     cat_n = cat_n -1
-                print(str(gs_track_column) + " | " + full_gs[0][gs_track_column-2])
                 if self.isInterruptionRequested():
                     self.stopped.emit()
                     try:
@@ -109,62 +114,50 @@ class Updater(QThread):
                 track_lb = track_lb["ghosts"]
                 self.display_msg.emit(f"Connected to the {track_name} leaderboard in {time.time()-start_time}.")
                 start_time_local = time.time()
-                for ID in IDs:
-                    if self.isInterruptionRequested():
-                        self.stopped.emit()
+                for player_info in track_lb:
+                    if player_info["playerId"] in filtered_IDs:
+                        ID = player_info["playerId"]
+                        jolly = id_jolly[filtered_IDs.index(ID)]
+                        row = IDs.index(ID)+2
+                        if self.isInterruptionRequested():
+                            self.stopped.emit()
+                            try:
+                                rmtree("tmp/")
+                            except:
+                                pass
+                            return -1
+
+                        Player_Name = full_gs[row][0]
+                        # if self.debug_checked: self.display_msg.emit(f"[CHECKING ROW {row+1}] Player Name: {Player_Name}, ID: {ID}")
+
+                        if self.isInterruptionRequested():
+                            self.stopped.emit()
+                            try:
+                                rmtree("tmp/")
+                            except:
+                                pass
+                            return -1
+                        new_time = player_info["bestSplitSimple"]
+                        new_time = gs.get_timedelta_from_timestring(new_time)
+                        gs_row_values = full_gs[row+jolly]
                         try:
-                            rmtree("tmp/")
+                            old_time = gs_row_values[gs_track_column]
+                            old_time = gs.get_timedelta_from_timestring(old_time)
                         except:
-                            pass
-                        return -1
-
-                    ID, jolly = gs.get_jolly_and_purify_ID(ID)
-
-                    row += 1
-
-                    if ID == "noID":
-                        # if self.debug_skipped: self.display_msg.emit(f"[SKIPPING ROW {row+1}] NO ID") # +1 for the Spreadsheet's offset
-                        continue
-                    elif ID == "":
-                        # if self.debug_skipped: self.display_msg.emit(f"  [SKIPPING ROW {row+1}] EMPTY ID CELL")
-                        log_out += f"  [SKIPPING ROW {row}] EMPTY ID CELL\n"
-                        continue
-
-                    Player_Name = full_gs[row][0]
-                    # if self.debug_checked: self.display_msg.emit(f"[CHECKING ROW {row+1}] Player Name: {Player_Name}, ID: {ID}")
-                    try:
-                        player_info = [x for x in track_lb if x["playerId"]==ID][0]
-                    except:
-                        continue
-
-                    if self.isInterruptionRequested():
-                        self.stopped.emit()
-                        try:
-                            rmtree("tmp/")
-                        except:
-                            pass
-                        return -1
-                    new_time = player_info["bestSplitSimple"]
-                    new_time = gs.get_timedelta_from_timestring(new_time)
-                    gs_row_values = full_gs[row+jolly]
-                    try:
-                        old_time = gs_row_values[gs_track_column]
-                        old_time = gs.get_timedelta_from_timestring(old_time)
-                    except:
-                        old_time = datetime.timedelta()
-                    if not (old_time == datetime.timedelta() 
-                        or (full_gs[row+jolly][gs_track_column+2] in ["TBA", "", "No"] and new_time <= old_time) 
-                        or (full_gs[row+jolly][gs_track_column+2] not in ["TBA", "", "No"] and new_time < old_time)):
-                            continue
-                    new_time = gs.get_timestring_from_timedelta_2(new_time,cat_n)
-                    new_link = "=HYPERLINK(\"https://chadsoft.co.uk/time-trials" + player_info["href"][:-3] + "html\";\"Sì\")"
-                    old_flap_vid_link = full_gs[row+jolly][gs_track_column+4] # Used to warn about possibly overwriting a TBA video
-                    if old_flap_vid_link != "":
-                        self.display_msg.emit(f"      [Old Video Link found] {old_flap_vid_link}")
-                        log_out += f"      [OLD VIDEO LINK FOUND] {old_flap_vid_link}\n"
-                    full_gs[row+jolly][gs_track_column] = new_time
-                    full_gs[row+jolly][gs_track_column+2] = new_link
-                    full_gs[row+jolly][gs_track_column+4] = ""
+                            old_time = datetime.timedelta()
+                        if not (old_time == datetime.timedelta() 
+                            or (full_gs[row+jolly][gs_track_column+2] in ["TBA", "", "No"] and new_time <= old_time) 
+                            or (full_gs[row+jolly][gs_track_column+2] not in ["TBA", "", "No"] and new_time < old_time)):
+                                continue
+                        new_time = gs.get_timestring_from_timedelta_2(new_time,cat_n)
+                        new_link = "=HYPERLINK(\"https://chadsoft.co.uk/time-trials" + player_info["href"][:-3] + "html\";\"Sì\")"
+                        old_flap_vid_link = full_gs[row+jolly][gs_track_column+4] # Used to warn about possibly overwriting a TBA video
+                        if old_flap_vid_link != "":
+                            self.display_msg.emit(f"      [Old Video Link found] {old_flap_vid_link}")
+                            log_out += f"      [OLD VIDEO LINK FOUND] {old_flap_vid_link}\n"
+                        full_gs[row+jolly][gs_track_column] = new_time
+                        full_gs[row+jolly][gs_track_column+2] = new_link
+                        full_gs[row+jolly][gs_track_column+4] = ""
                 self.display_msg.emit(f"{track_name} took {time.time()-start_time_local} to update")
                 total_time += time.time()-start_time
                 self.display_msg.emit(f"Total Time Elapsed: {total_time}")
