@@ -32,30 +32,26 @@ class Updater(QThread):
 
     def __init__(self, parent = None):
         super(Updater, self).__init__(parent)
-        self.setOptions(10, True, True, True, True, True, True, True)
+        self.setOptions(10, True, True, True, 10, True, True, True, True)
 
     def stop_msg(self):
         self.display_msg.emit("\n\n[OPERATION STOPPED]")
 
-    def setOptions(self, partial_update_rows:int, debug_checked: bool, debug_skipped: bool, debug_ghosts: bool, debug_found: bool, debug_complete: bool, debug_gs_3laps_info: bool, debug_gs_unr_info: bool):
-        self.partial_update_rows = partial_update_rows
-        self.debug_checked = debug_checked
-        self.debug_skipped = debug_skipped
-        self.debug_ghosts = debug_ghosts
-        self.debug_found = debug_found
-        self.debug_complete = debug_complete
-        self.debug_gs_3laps_info = debug_gs_3laps_info
-        self.debug_gs_unr_info = debug_gs_unr_info
+    def setOptions(self, track_skip_3lap:int, check_1_3lap: bool, check_2_3lap: bool, check_3_3lap: bool, track_skip_flap: int, check_1_flap: bool, check_2_flap: bool, check_3_flap: bool, check_print_info_unr: bool):
+        self.track_skip_3lap = track_skip_3lap
+        self.check_1_3lap = check_1_3lap
+        self.check_2_3lap = check_2_3lap
+        self.check_3_3lap = check_3_3lap
+        self.track_skip_flap = track_skip_flap
+        self.check_1_flap = check_1_flap
+        self.check_2_flap = check_2_flap
+        self.check_3_flap = check_3_flap
+        self.check_print_info_unr = check_print_info_unr
 
-    def setMode(self, active_3laps: bool, active_unr: bool) -> None:
-        if active_3laps and active_unr:
-            self.mode = 0
-        elif active_3laps:
-            self.mode = 1
-        elif active_unr:
-            self.mode = 2
-        else:
-            self.mode = 3
+    def setMode(self, active_3lap: bool, active_flap: bool, active_unr: bool) -> None:
+        self.active_3lap = active_3lap
+        self.active_flap = active_flap
+        self.active_unr = active_unr
 
     def update_flaps(self, wks: gspread.worksheet.Worksheet = None):
         log_out = ""
@@ -67,8 +63,7 @@ class Updater(QThread):
         total_time = 0
         if wks == None: 
             wks, feedback = gs.get_worksheet(SERVICE_KEY_FILENAME, GOOGLE_SHEET_KEY, WORKSHEET_NAME)
-            if feedback and self.debug_gs_3laps_info:
-                self.display_msg.emit(feedback)
+            if feedback: self.display_msg.emit(feedback)
         full_gs = gs.get_all_values(wks)
         gs_track_column = 2 + gs.GS_START_INDEX
         
@@ -82,7 +77,6 @@ class Updater(QThread):
             filtered_IDs.append(i[0])
             id_jolly.append(i[1])
         tracks = list(RT_TRACKS.keys())
-        from_last_gs_update = 0
 
         while start_offset > 0: # reminder: do -1 for user input 
             print(str(gs_track_column) + " | https://chadsoft.co.uk/time-trials/leaderboard/" + tracks[0] + "00-fast-lap.html")
@@ -128,7 +122,6 @@ class Updater(QThread):
                             return -1
 
                         Player_Name = full_gs[row][0]
-                        # if self.debug_checked: self.display_msg.emit(f"[CHECKING ROW {row+1}] Player Name: {Player_Name}, ID: {ID}")
 
                         if self.isInterruptionRequested():
                             self.stopped.emit()
@@ -165,10 +158,10 @@ class Updater(QThread):
                 cat_n += 1
             gs.set_all_values(wks, full_gs)
             full_gs = gs.get_all_values(wks)
-            if self.debug_gs_3laps_info: self.display_msg.emit(f"[SUCCESSFUL] UPDATED {track_name}, PROCEEDING WITH THE NEXT BLOCK...")
+            self.display_msg.emit(f"[SUCCESSFUL] UPDATED {track_name}, PROCEEDING WITH THE NEXT BLOCK...")
             with open("log.txt","w") as f:
                 f.write(log_out)
-        if self.debug_gs_3laps_info: self.display_msg.emit("[FLAPS UPDATE FINISHED]")
+        self.display_msg.emit("[FLAPS UPDATE FINISHED]")
 
     def update_3laps(self, wks: gspread.worksheet.Worksheet = None):
         log_out = ""
@@ -179,7 +172,7 @@ class Updater(QThread):
         self.display_msg.emit("\n[3LAPs UPDATE STARTED]")
         if wks == None: 
             wks, feedback = gs.get_worksheet(SERVICE_KEY_FILENAME, GOOGLE_SHEET_KEY, WORKSHEET_NAME)
-            if feedback and self.debug_gs_3laps_info:
+            if feedback:
                 self.display_msg.emit(feedback)
         full_gs = gs.get_all_values(wks)
         IDs = [i[gs.ID_COLUMN] for i in full_gs[2:]]
@@ -199,23 +192,23 @@ class Updater(QThread):
                 return -1
             row += 1
             if ID == "noID":
-                if self.debug_skipped: self.display_msg.emit(f"[SKIPPING ROW {row+1}] NO ID") # +1 for the Spreadsheet's offset
+                self.display_msg.emit(f"[SKIPPING ROW {row+1}] NO ID") # +1 for the Spreadsheet's offset
                 continue
             elif ID == "":
-                if self.debug_skipped: self.display_msg.emit(f"  [SKIPPING ROW {row+1}] EMPTY ID CELL")
+                self.display_msg.emit(f"  [SKIPPING ROW {row+1}] EMPTY ID CELL")
                 log_out += f"  [SKIPPING ROW {row+1}] EMPTY ID CELL\n"
                 continue
             ID, jolly = gs.get_jolly_and_purify_ID(ID)
 
             Player_Name = full_gs[row][0]
 
-            if self.debug_checked: self.display_msg.emit(f"[CHECKING ROW {row+1}] Player Name: {Player_Name}, ID: {ID}")
+            self.display_msg.emit(f"[CHECKING ROW {row+1}] Player Name: {Player_Name}, ID: {ID}")
 
             cd_LM = cd.get_player_last_modified(ID)
             if LM != "" and datetime.datetime.fromisoformat(LM) > cd_LM:
                 continue
 
-            if self.debug_checked: self.display_msg.emit(f"  [DATA FOUND AT ROW {row+1}] fetching player JSON from Chadsoft...")
+            self.display_msg.emit(f"  [DATA FOUND AT ROW {row+1}] fetching player JSON from Chadsoft...")
             log_out += f"  [DATA FOUND AT ROW {row+1}] fetching {Player_Name}'s JSON from Chadsoft...\n"
             from_last_gs_update += 1
             player_data = json.loads(cd.get_player_pbs(ID))
@@ -242,7 +235,7 @@ class Updater(QThread):
                     categoryId = -1
                 gs_track_column = gs.get_track_column(trackId, categoryId)
                 if gs_track_column == "INVALID_TRACK_CATEGORY":
-                    if self.debug_ghosts: self.display_msg.emit(f"  [SKIPPING INVALID TRACK CATEGORY] {g['trackName']}; category: {cd.get_category(categoryId)}")
+                    self.display_msg.emit(f"  [SKIPPING INVALID TRACK CATEGORY] {g['trackName']}; category: {cd.get_category(categoryId)}")
                     log_out += f"  [SKIPPING INVALID TRACK CATEGORY] {g['trackName']}; category: {cd.get_category(categoryId)}\n"
                     continue
 
@@ -263,7 +256,7 @@ class Updater(QThread):
                 old_3lap_vid_link = full_gs[row+jolly][gs_track_column+5] # Used to warn about possibly overwriting a TBA video
                 rkg_info = cd.get_ghost_rkg(g["href"])
 
-                if self.debug_ghosts: self.display_msg.emit(f"  (NEW GHOSTS FOUND), {g['trackName']}; category: {cd.get_category(categoryId)}; time: {new_time}, ghost_link: {cd.get_ghost_link(g['href'])}")
+                self.display_msg.emit(f"  (NEW GHOSTS FOUND), {g['trackName']}; category: {cd.get_category(categoryId)}; time: {new_time}, ghost_link: {cd.get_ghost_link(g['href'])}")
                 log_out += f"  (NEW GHOSTS FOUND), {g['trackName']}; category: {cd.get_category(categoryId)}; time: {new_time}, ghost_link: {cd.get_ghost_link(g['href'])}\n"
                 # Modify the values in the full_gs to the ones of the GHOST
                 if old_3lap_vid_link != "":
@@ -287,7 +280,7 @@ class Updater(QThread):
                 from_last_gs_update = 0
                 gs.set_all_values(wks, full_gs)
                 full_gs = gs.get_all_values(wks)
-                if self.debug_gs_3laps_info: self.display_msg.emit(f"[SUCCESSFUL] UPDATED {self.partial_update_rows} ROWS OF GOOGLE SHEETS, PROCEEDING WITH THE NEXT BLOCK...")
+                self.display_msg.emit(f"[SUCCESSFUL] UPDATED {self.partial_update_rows} ROWS OF GOOGLE SHEETS, PROCEEDING WITH THE NEXT BLOCK...")
 
         gs.set_all_values(wks, full_gs)
         with open("log.txt","w") as f:
@@ -298,7 +291,7 @@ class Updater(QThread):
         self.display_msg.emit("\n[UNRESTRICTED UPDATE STARTED]")
         if wks == None: 
             wks, feedback = gs.get_worksheet(SERVICE_KEY_FILENAME, GOOGLE_SHEET_KEY, WORKSHEET_NAME)
-            if feedback and self.debug_gs_unr_info:
+            if feedback:
                 self.display_msg.emit(feedback)
         full_gs = gs.get_all_values(wks)
 
@@ -356,7 +349,7 @@ class Updater(QThread):
                         full_gs[row][next_column+7] = vehicle
                         full_gs[row][next_column+8] = player
                         full_gs[row][next_column+9] = controller
-                        if self.debug_found: self.display_msg.emit(f"[UNRESTRICTED_3LAP] Found at row: {row+1}, column: {next_column+1}")
+                        self.display_msg.emit(f"[UNRESTRICTED_3LAP] Found at row: {row+1}, column: {next_column+1}")
 
                 if not track_has_sc_glitch: complete_3lap_unr = False
 
@@ -364,12 +357,11 @@ class Updater(QThread):
             full_gs[row][gs.CHECK_FULL_3LAP_NORMAL_COLUMN] = complete_3lap_norm
             full_gs[row][gs.CHECK_FULL_3LAP_UNRESTRICTED_COLUMN] = complete_3lap_unr
 
-            if self.debug_complete:
-                if complete_3lap_norm: self.display_msg.emit(f"[3LAP NORMAL]       is complete at row {row+1}")
-                if complete_3lap_unr:  self.display_msg.emit(f"[3LAP UNRESTRICTED] is complete at row {row+1}")
+            if complete_3lap_norm: self.display_msg.emit(f"[3LAP NORMAL]       is complete at row {row+1}")
+            if complete_3lap_unr:  self.display_msg.emit(f"[3LAP UNRESTRICTED] is complete at row {row+1}")
 
 
-        if self.debug_gs_unr_info: self.display_msg.emit("[UPDATING...] Uploading data to Google Sheets")
+        self.display_msg.emit("[UPDATING...] Uploading data to Google Sheets")
         gs.set_all_values(wks, full_gs)
         self.display_msg.emit("\n[UNRESTRICTED_3LAPs UPDATE FINISHED]")
 
@@ -416,7 +408,7 @@ class Updater(QThread):
                         full_gs[row][next_column+2] = this_gs_time
                         full_gs[row][next_column+4] = ghost
                         full_gs[row][next_column+6] = video
-                        if self.debug_found: self.display_msg.emit(f"[UNRESTRICTED_FLAP] Found at row: {row+1}, column: {next_column+3}") # +3 instead of +1 for the offset
+                        self.display_msg.emit(f"[UNRESTRICTED_FLAP] Found at row: {row+1}, column: {next_column+3}") # +3 instead of +1 for the offset
 
                 if not track_has_sc_glitch: complete_flap_unr = False
 
@@ -424,19 +416,17 @@ class Updater(QThread):
             full_gs[row][gs.CHECK_FULL_FLAP_NORMAL_COLUMN] = complete_flap_norm
             full_gs[row][gs.CHECK_FULL_FLAP_UNRESTRICTED_COLUMN] = complete_flap_unr
 
-            if self.debug_complete:
-                if complete_flap_norm: self.display_msg.emit(f"[FLAP NORMAL]       is complete at row {row+1}")
-                if complete_flap_unr:  self.display_msg.emit(f"[FLAP UNRESTRICTED] is complete at row {row+1}")
+            if complete_flap_norm: self.display_msg.emit(f"[FLAP NORMAL]       is complete at row {row+1}")
+            if complete_flap_unr:  self.display_msg.emit(f"[FLAP UNRESTRICTED] is complete at row {row+1}")
 
-        if self.debug_gs_unr_info: self.display_msg.emit("[UPDATING...] Uploading data to Google Sheets")
+        self.display_msg.emit("[UPDATING...] Uploading data to Google Sheets")
         gs.set_all_values(wks, full_gs)
         self.display_msg.emit("\n[UNRESTRICTED_FLAP UPDATE FINISHED]")
 
     def update_everything(self):
         self.display_msg.emit("\n[UPDATE OF EVERYTHING STARTED]")
         wks, feedback = gs.get_worksheet(SERVICE_KEY_FILENAME, GOOGLE_SHEET_KEY, WORKSHEET_NAME)
-        if feedback:
-            if self.debug_gs_3laps_info or self.debug_gs_unr_info: self.display_msg.emit(feedback)
+        if feedback: self.display_msg.emit(feedback)
         exit_code = self.update_3laps(wks)
         if exit_code == -1: return -1
         self.update_unrestricted_and_checks(wks)
@@ -451,9 +441,9 @@ class Updater(QThread):
             except:
                 pass
             return -1
-        
-        match self.mode:
-            case 0 : self.update_everything()
-            case 1 : self.update_3laps()
-            case 2 : self.update_unrestricted_and_checks()
-            case 3 : self.display_msg.emit("\n\n[NOTHING TO DO]\n\n")
+
+        if self.active_3lap and self.active_flap and self.active_unr: self.update_everything()
+        elif self.active_3lap: self.update_3laps()
+        elif self.active_flap: self.update_flaps()
+        elif self.active_unr: self.update_unrestricted_and_checks()
+        else: self.display_msg.emit("\n\n[NOTHING TO DO]\n\n")

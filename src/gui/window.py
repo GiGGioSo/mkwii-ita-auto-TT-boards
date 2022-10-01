@@ -27,47 +27,75 @@ class MainWindow(QMainWindow):
         self.updater.display_msg.connect(self.add_output)
 
         # 3laps options
-        self.checked_players_check = QCheckBox("Players checked (with ID)")
-        self.checked_players_check.setChecked(True)
-        self.skipped_players_check = QCheckBox("Skipped players (no ID)")
-        self.skipped_players_check.setChecked(True)
-        self.ghosts_info_check = QCheckBox("Ghosts info")
-        self.ghosts_info_check.setChecked(True)
-        self.google_sheets_3laps_check = QCheckBox("Google sheets info")
-        self.google_sheets_3laps_check.setChecked(True)
+        self.check_1_3lap = QCheckBox("check 1")
+        self.check_1_3lap.setChecked(True)
+        self.check_2_3lap = QCheckBox("check 2")
+        self.check_2_3lap.setChecked(True)
+        self.check_3_3lap = QCheckBox("check 3")
+        self.check_3_3lap.setChecked(True)
         ## partial update rows spinbox
-        self.partial_update_rows_box = QSpinBox()
-        self.partial_update_rows_box.setMinimum(1)
-        self.partial_update_rows_box.setMaximum(1636)
-        self.partial_update_rows_box.setValue(10)
-        self.partial_update_rows_label = QLabel("Partial update rows:")
-        self.partial_update_rows_layout = QHBoxLayout()
-        self.partial_update_rows_layout.addWidget(self.partial_update_rows_label)
-        self.partial_update_rows_layout.addWidget(self.partial_update_rows_box)
+        self.track_skip_box_3lap = QSpinBox()
+        self.track_skip_box_3lap.setMinimum(1)
+        self.track_skip_box_3lap.setMaximum(32)
+        self.track_skip_box_3lap.setValue(10)
+        self.track_skip_label_3lap = QLabel("Tracks to skip: ")
+        self.track_skip_layout_3lap = QHBoxLayout()
+        self.track_skip_layout_3lap.addWidget(self.track_skip_label_3lap)
+        self.track_skip_layout_3lap.addWidget(self.track_skip_box_3lap)
         ## creating common layout
-        self.update_3laps_layout = QVBoxLayout()
-        self.update_3laps_layout.setAlignment(Qt.AlignTop)
-        self.update_3laps_layout.addWidget(self.checked_players_check)
-        self.update_3laps_layout.addWidget(self.skipped_players_check)
-        self.update_3laps_layout.addWidget(self.ghosts_info_check)
-        self.update_3laps_layout.addWidget(self.google_sheets_3laps_check)
-        self.update_3laps_layout.addLayout(self.partial_update_rows_layout)
-        self.update_3laps_group = QGroupBox("Update times")
-        self.update_3laps_group.setCheckable(True)
-        self.update_3laps_group.setLayout(self.update_3laps_layout)
+        self.update_layout_3lap = QVBoxLayout()
+        self.update_layout_3lap.setAlignment(Qt.AlignTop)
+        self.update_layout_3lap.addWidget(self.check_1_3lap)
+        self.update_layout_3lap.addWidget(self.check_2_3lap)
+        self.update_layout_3lap.addWidget(self.check_3_3lap)
+        self.update_layout_3lap.addLayout(self.track_skip_layout_3lap)
+        self.update_group_3lap = QGroupBox("3lap")
+        self.update_group_3lap.setCheckable(True)
+        self.update_group_3lap.setLayout(self.update_layout_3lap)
+
+        # flap options
+        self.check_1_flap = QCheckBox("check 1")
+        self.check_1_flap.setChecked(True)
+        self.check_2_flap = QCheckBox("check 2")
+        self.check_2_flap.setChecked(True)
+        self.check_3_flap = QCheckBox("check 3")
+        self.check_3_flap.setChecked(True)
+        ## partial update rows spinbox flap
+        self.track_skip_box_flap = QSpinBox()
+        self.track_skip_box_flap.setMinimum(1)
+        self.track_skip_box_flap.setMaximum(32)
+        self.track_skip_box_flap.setValue(10)
+        self.track_skip_label_flap = QLabel("Tracks to skip: ")
+        self.track_skip_layout_flap = QHBoxLayout()
+        self.track_skip_layout_flap.addWidget(self.track_skip_label_flap)
+        self.track_skip_layout_flap.addWidget(self.track_skip_box_flap)
+        ## creating common layout
+        self.update_layout_flap = QVBoxLayout()
+        self.update_layout_flap.setAlignment(Qt.AlignTop)
+        self.update_layout_flap.addWidget(self.check_1_flap)
+        self.update_layout_flap.addWidget(self.check_2_flap)
+        self.update_layout_flap.addWidget(self.check_3_flap)
+        self.update_layout_flap.addLayout(self.track_skip_layout_flap)
+        self.update_group_flap = QGroupBox("Flap")
+        self.update_group_flap.setCheckable(True)
+        self.update_group_flap.setLayout(self.update_layout_flap)
+
+        ## Composing Update times section, with both 3laps and flap groupboxes
+        self.update_layout_all = QVBoxLayout()
+        self.update_layout_all.setAlignment(Qt.AlignTop)
+        self.update_layout_all.addWidget(self.update_group_3lap)
+        self.update_layout_all.addWidget(self.update_group_flap)
+        self.update_group_all = QGroupBox("Update times")
+        self.update_group_all.setCheckable(False)
+        self.update_group_all.setLayout(self.update_layout_all)
+
 
         # unrestricted options
-        self.unrestricteds_found = QCheckBox("Found unrestricteds")
-        self.unrestricteds_found.setChecked(True)
-        self.complete_times = QCheckBox("Complete timesheets")
-        self.complete_times.setChecked(True)
-        self.google_sheets_unr_check = QCheckBox("Google sheets info")
-        self.google_sheets_unr_check.setChecked(True)
+        self.check_print_info_unr = QCheckBox("Print info")
+        self.check_print_info_unr.setChecked(True)
         self.update_unr_layout = QVBoxLayout()
         self.update_unr_layout.setAlignment(Qt.AlignTop)
-        self.update_unr_layout.addWidget(self.unrestricteds_found)
-        self.update_unr_layout.addWidget(self.complete_times)
-        self.update_unr_layout.addWidget(self.google_sheets_unr_check)
+        self.update_unr_layout.addWidget(self.check_print_info_unr)
         self.update_unr_group = QGroupBox("Update unrestricteds")
         self.update_unr_group.setCheckable(True)
         self.update_unr_group.setLayout(self.update_unr_layout)
@@ -86,7 +114,7 @@ class MainWindow(QMainWindow):
 
         # composing left column
         self.left_layout = QVBoxLayout()
-        self.left_layout.addWidget(self.update_3laps_group)
+        self.left_layout.addWidget(self.update_group_all)
         self.left_layout.addWidget(self.update_unr_group)
         self.left_layout.addStretch()
         self.left_layout.addLayout(self.start_stop_layout)
@@ -125,18 +153,20 @@ class MainWindow(QMainWindow):
         self.stop_button.setEnabled(True)
         if not self.updater.isRunning():
             self.updater.setMode(
-                self.update_3laps_group.isChecked(),
-                self.update_unr_group.isChecked()
+                self.update_group_3lap.isChecked(),
+                self.update_group_flap.isChecked(),
+                self.update_unr_group.isChecked(),
                 )
             self.updater.setOptions(
-                self.partial_update_rows_box.value(),
-                self.checked_players_check.isChecked(),
-                self.skipped_players_check.isChecked(),
-                self.ghosts_info_check.isChecked(),
-                self.unrestricteds_found.isChecked(),
-                self.complete_times.isChecked(),
-                self.google_sheets_3laps_check.isChecked(),
-                self.google_sheets_unr_check.isChecked()
+                self.track_skip_box_3lap.value(),
+                self.check_1_3lap.isChecked(),
+                self.check_2_3lap.isChecked(),
+                self.check_3_3lap.isChecked(),
+                self.track_skip_box_flap.value(),
+                self.check_1_flap.isChecked(),
+                self.check_2_flap.isChecked(),
+                self.check_3_flap.isChecked(),
+                self.check_print_info_unr.isChecked(),
                 )
             self.updater.start()
 
