@@ -27,7 +27,7 @@ class MainWindow(QMainWindow):
         self.updater.display_msg.connect(self.add_output)
 
         # 3laps options
-        self.rkg_dl_3lap = QCheckBox("check 1")
+        self.rkg_dl_3lap = QCheckBox("Download new Ghosts")
         self.rkg_dl_3lap.setChecked(True)
         self.check_2_3lap = QCheckBox("check 2")
         self.check_2_3lap.setChecked(True)
