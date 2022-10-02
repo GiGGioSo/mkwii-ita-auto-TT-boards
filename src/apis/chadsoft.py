@@ -15,7 +15,7 @@ RT_TRACKS = {
     "08/1AE1A7D894960B38E09E7494373378D87305A163/" : CATEGORY_IDS["Case_Normal"],                 # LC                 Circuito di Luigi
     "01/90720A7D57A7C76E2347782F6BDE5D22342FB7DD/" : CATEGORY_IDS["Case_Normal"],                 # MMM                Prateria verde
     "02/0E380357AFFCFD8722329994885699D9927F8276/" : CATEGORY_IDS["Case_Normal_Shortcut_Glitch"], # MG    (NO-SC+SC/G) Gola Fungo
-    "04/1896AEA49617A571C66FF778D8F2ABBE9E5D7479/" : CATEGORY_IDS["Case_Normal_Shortcut"],        # TF    (NO-SC/SC)   Fabbrica di Toad
+    "04/1896AEA49617A571C66FF778D8F2ABBE9E5D7479/" : CATEGORY_IDS["Case_Normal_Shortcut"],       # TF    (NO-SC/SC)   Fabbrica di Toad
     "00/7752BB51EDBC4A95377C0A05B0E0DA1503786625/" : CATEGORY_IDS["Case_Normal_Glitch"],          # MC    (NO-SC/G)    Circuito di Mario
     "05/E4BF364CB0C5899907585D731621CA930A4EF85C/" : CATEGORY_IDS["Case_Normal_Shortcut_Glitch"], # CM    (NO-SC/SC/G) Outlet Cocco
     "06/B02ED72E00B400647BDA6845BE387C47D251F9D1/" : CATEGORY_IDS["Case_Normal"],                 # DKSC               Pista Snowboard DK
@@ -96,6 +96,20 @@ def get_player_last_modified(ID: str, base_url: str = DEFAULT_BASE_URL, url_modi
     time.sleep(TIME_WAIT_AFTER_HEAD)
     return get_datetime_from_chadsoft_date(r.headers["Last-Modified"])
 
+def get_category_2(track_link:str,category_id:str):
+    n_link = RT_TRACKS[track_link].index(category_id)
+    length = len(RT_TRACKS[track_link])
+    if length == 2:
+        if n_link == 0: return "Normal"
+        elif category_id == "01": return "Glitch"
+        elif category_id == "00": return "Shortcut"
+    if length == 3 or 1:
+        match n_link:
+            case 0 : return "Normal"
+            case 1 : return "Shortcut"
+            case 2 : return "Glitch"
+
+
 def get_date_from_rkg(rkg_file):
     rkg_file = "{:08b}".format(int(rkg_file.hex(), 16))
     year = str(2000 + int(rkg_file[75:82],base=2))
@@ -131,7 +145,7 @@ def get_ghost_link(ghost: str) -> str:
     return "https://www.chadsoft.co.uk/time-trials" + ghost[:-3] + "html"
 
 def get_ghost_rkg(ghost: str) -> str:
-    r = requests.get("https://www.chadsoft.co.uk/time-trials" + ghost[:-3] + "rkg")
+    r = requests.get("https://www.chadsoft.co.uk/time-trials" + ghost)
     return r.content 
 
 def get_vehicle(ID: int) -> str:

@@ -37,13 +37,13 @@ class Updater(QThread):
     def stop_msg(self):
         self.display_msg.emit("\n\n[OPERATION STOPPED]")
 
-    def setOptions(self, track_skip_3lap:int, check_1_3lap: bool, check_2_3lap: bool, check_3_3lap: bool, track_skip_flap: int, check_1_flap: bool, check_2_flap: bool, check_3_flap: bool, check_print_info_unr: bool):
-        self.track_skip_3lap = track_skip_3lap
+    def setOptions(self, rkg_dl_3lap:int, check_1_3lap: bool, check_2_3lap: bool, check_3_3lap: bool, track_skip_flap: int, rkg_dl_flap: bool, check_2_flap: bool, check_3_flap: bool, check_print_info_unr: bool):
+        self.rkg_dl_3lap = rkg_dl_3lap
         self.check_1_3lap = check_1_3lap
         self.check_2_3lap = check_2_3lap
         self.check_3_3lap = check_3_3lap
         self.track_skip_flap = track_skip_flap
-        self.check_1_flap = check_1_flap
+        self.rkg_dl_flap = rkg_dl_flap
         self.check_2_flap = check_2_flap
         self.check_3_flap = check_3_flap
         self.check_print_info_unr = check_print_info_unr
@@ -67,15 +67,19 @@ class Updater(QThread):
         full_gs = gs.get_all_values(wks)
         gs_track_column = 2 + gs.GS_START_INDEX
         
-        start_offset = 27
+        start_offset = self.track_skip_flap
    
         IDs = [i[gs.ID_COLUMN] for i in full_gs[2:]]
-        filtered_IDs_tuples = list(map(gs.get_jolly_and_purify_ID,filter(lambda x: x!="noID",IDs)))
+        filtered_IDs_tuples = list(map(gs.get_jolly_and_purify_ID,IDs))
         id_jolly = []
         filtered_IDs = []
+        unfiltered_IDs = []
         for i in filtered_IDs_tuples:
-            filtered_IDs.append(i[0])
-            id_jolly.append(i[1])
+            if i[0] != "noID":
+                filtered_IDs.append(i[0])
+                id_jolly.append(i[1])
+            unfiltered_IDs.append(i[0])
+
         tracks = list(RT_TRACKS.keys())
 
         while start_offset > 0: # reminder: do -1 for user input 
@@ -107,13 +111,16 @@ class Updater(QThread):
                 track_name = track_lb["name"]
                 track_lb = track_lb["ghosts"]
                 self.display_msg.emit(f"Connected to the {track_name} leaderboard in {time.time()-start_time}.")
+                log_out += f"Connected to the {track_name} leaderboard in {time.time()-start_time}.\n"
                 start_time_local = time.time()
                 for player_info in track_lb:
                     if player_info["playerId"] in filtered_IDs:
                         ID = player_info["playerId"]
                         jolly = id_jolly[filtered_IDs.index(ID)]
-                        row = IDs.index(ID)+2
+                        row = unfiltered_IDs.index(ID)+2
                         if self.isInterruptionRequested():
+                            with open("log.txt","w") as f:
+                                f.write(log_out)
                             self.stopped.emit()
                             try:
                                 rmtree("tmp/")
@@ -121,9 +128,13 @@ class Updater(QThread):
                                 pass
                             return -1
 
-                        Player_Name = full_gs[row][0]
+                        player_name = full_gs[row][0]
+                        self.display_msg.emit(f"Player Found: {player_name}, ID: {ID}, Row: {row+1}")
+                        log_out += f"Player Found: {player_name}, ID: {ID}, Row: {row+1}\n"
 
                         if self.isInterruptionRequested():
+                            with open("log.txt","w") as f:
+                                f.write(log_out)
                             self.stopped.emit()
                             try:
                                 rmtree("tmp/")
@@ -142,18 +153,30 @@ class Updater(QThread):
                             or (full_gs[row+jolly][gs_track_column+2] in ["TBA", "", "No"] and new_time <= old_time) 
                             or (full_gs[row+jolly][gs_track_column+2] not in ["TBA", "", "No"] and new_time < old_time)):
                                 continue
+                        new_link = "https://chadsoft.co.uk/time-trials" + player_info["href"][:-3]+"html"
                         new_time = gs.get_timestring_from_timedelta_2(new_time,cat_n)
-                        new_link = "=HYPERLINK(\"https://chadsoft.co.uk/time-trials" + player_info["href"][:-3] + "html\";\"Sì\")"
+                        self.display_msg.emit("  (NEW GHOSTS FOUND), " + track_name + ", category: " + str(cd.get_category_2(track_link,category_id)) + ", time: " + new_time + ", ghost_link: "+ new_link)
+                        log_out += "  (NEW GHOSTS FOUND), " + track_name + ", category: " + str(cd.get_category_2(track_link,category_id)) + ", time: " + new_time + ", ghost_link: "+ new_link+"\n"
+                        new_cell_link = "=HYPERLINK(\""+new_link+"\";\"Sì\")"
                         old_flap_vid_link = full_gs[row+jolly][gs_track_column+4] # Used to warn about possibly overwriting a TBA video
                         if old_flap_vid_link != "":
                             self.display_msg.emit(f"      [Old Video Link found] {old_flap_vid_link}")
                             log_out += f"      [OLD VIDEO LINK FOUND] {old_flap_vid_link}\n"
                         full_gs[row+jolly][gs_track_column] = new_time
-                        full_gs[row+jolly][gs_track_column+2] = new_link
+                        full_gs[row+jolly][gs_track_column+2] = new_cell_link
                         full_gs[row+jolly][gs_track_column+4] = ""
+                        if self.rkg_dl_flap:
+                            rkg = cd.get_ghost_rkg(player_info["href"])
+                            try: os.mkdir("ghosts_flap")
+                            except: pass
+                            try: os.mkdir("ghosts_flap/"+track_name)
+                            except: pass
+                            with open("ghosts_flap/"+track_name+"/"+player_name.replace("*","")+".rkg","wb") as f:
+                                f.write(rkg)
                 self.display_msg.emit(f"{track_name} took {time.time()-start_time_local} to update")
                 total_time += time.time()-start_time
                 self.display_msg.emit(f"Total Time Elapsed: {total_time}")
+                log_out += f"Total Time Elapsed: {total_time}"
                 gs_track_column += gs.GS_TRACKS_INTERVAL
                 cat_n += 1
             gs.set_all_values(wks, full_gs)
@@ -442,8 +465,7 @@ class Updater(QThread):
                 pass
             return -1
 
-        if self.active_3lap and self.active_flap and self.active_unr: self.update_everything()
-        elif self.active_3lap: self.update_3laps()
+        if self.active_3lap: self.update_3laps()
         elif self.active_flap: self.update_flaps()
         elif self.active_unr: self.update_unrestricted_and_checks()
         else: self.display_msg.emit("\n\n[NOTHING TO DO]\n\n")

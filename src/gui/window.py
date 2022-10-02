@@ -27,17 +27,17 @@ class MainWindow(QMainWindow):
         self.updater.display_msg.connect(self.add_output)
 
         # 3laps options
-        self.check_1_3lap = QCheckBox("check 1")
-        self.check_1_3lap.setChecked(True)
+        self.rkg_dl_3lap = QCheckBox("check 1")
+        self.rkg_dl_3lap.setChecked(True)
         self.check_2_3lap = QCheckBox("check 2")
         self.check_2_3lap.setChecked(True)
         self.check_3_3lap = QCheckBox("check 3")
         self.check_3_3lap.setChecked(True)
         ## partial update rows spinbox
         self.track_skip_box_3lap = QSpinBox()
-        self.track_skip_box_3lap.setMinimum(1)
-        self.track_skip_box_3lap.setMaximum(32)
-        self.track_skip_box_3lap.setValue(10)
+        self.track_skip_box_3lap.setMinimum(0)
+        self.track_skip_box_3lap.setMaximum(31)
+        self.track_skip_box_3lap.setValue(0)
         self.track_skip_label_3lap = QLabel("Tracks to skip: ")
         self.track_skip_layout_3lap = QHBoxLayout()
         self.track_skip_layout_3lap.addWidget(self.track_skip_label_3lap)
@@ -45,7 +45,7 @@ class MainWindow(QMainWindow):
         ## creating common layout
         self.update_layout_3lap = QVBoxLayout()
         self.update_layout_3lap.setAlignment(Qt.AlignTop)
-        self.update_layout_3lap.addWidget(self.check_1_3lap)
+        self.update_layout_3lap.addWidget(self.rkg_dl_3lap)
         self.update_layout_3lap.addWidget(self.check_2_3lap)
         self.update_layout_3lap.addWidget(self.check_3_3lap)
         self.update_layout_3lap.addLayout(self.track_skip_layout_3lap)
@@ -54,17 +54,17 @@ class MainWindow(QMainWindow):
         self.update_group_3lap.setLayout(self.update_layout_3lap)
 
         # flap options
-        self.check_1_flap = QCheckBox("check 1")
-        self.check_1_flap.setChecked(True)
+        self.rkg_dl_flap = QCheckBox("Download new Ghosts")
+        self.rkg_dl_flap.setChecked(True)
         self.check_2_flap = QCheckBox("check 2")
         self.check_2_flap.setChecked(True)
         self.check_3_flap = QCheckBox("check 3")
         self.check_3_flap.setChecked(True)
         ## partial update rows spinbox flap
         self.track_skip_box_flap = QSpinBox()
-        self.track_skip_box_flap.setMinimum(1)
-        self.track_skip_box_flap.setMaximum(32)
-        self.track_skip_box_flap.setValue(10)
+        self.track_skip_box_flap.setMinimum(0)
+        self.track_skip_box_flap.setMaximum(31)
+        self.track_skip_box_flap.setValue(0)
         self.track_skip_label_flap = QLabel("Tracks to skip: ")
         self.track_skip_layout_flap = QHBoxLayout()
         self.track_skip_layout_flap.addWidget(self.track_skip_label_flap)
@@ -72,7 +72,7 @@ class MainWindow(QMainWindow):
         ## creating common layout
         self.update_layout_flap = QVBoxLayout()
         self.update_layout_flap.setAlignment(Qt.AlignTop)
-        self.update_layout_flap.addWidget(self.check_1_flap)
+        self.update_layout_flap.addWidget(self.rkg_dl_flap)
         self.update_layout_flap.addWidget(self.check_2_flap)
         self.update_layout_flap.addWidget(self.check_3_flap)
         self.update_layout_flap.addLayout(self.track_skip_layout_flap)
@@ -159,11 +159,11 @@ class MainWindow(QMainWindow):
                 )
             self.updater.setOptions(
                 self.track_skip_box_3lap.value(),
-                self.check_1_3lap.isChecked(),
+                self.rkg_dl_3lap.isChecked(),
                 self.check_2_3lap.isChecked(),
                 self.check_3_3lap.isChecked(),
                 self.track_skip_box_flap.value(),
-                self.check_1_flap.isChecked(),
+                self.rkg_dl_flap.isChecked(),
                 self.check_2_flap.isChecked(),
                 self.check_3_flap.isChecked(),
                 self.check_print_info_unr.isChecked(),

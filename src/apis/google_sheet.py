@@ -18,9 +18,9 @@ LAST_MODIFIED_COLUMN = 6
 
 CATEGORY_IDS = {
     "Case_Normal" :                     ["00"],
-    "Case_Normal_Shortcut" :            ["00","02"],
+    "Case_Normal_Shortcut" :            ["02","00"],
     "Case_Normal_Glitch" :              ["00","01"],
-    "Case_Normal_Shortcut_Glitch" :     ["02","00","01"],
+    "Case_Normal_Shortcut_Glitch" :     ["02","00","01"]
 }
 
 #   Categories are always ordered as No-SC > SC > Glitch
@@ -29,8 +29,8 @@ CATEGORY_IDS = {
 #   ID          | 00
 #
 #   Categories: Normal, Shortcut
-#   Normal ID   | 00
-#   Shortcut ID | 02
+#   Normal ID   | 02
+#   Shortcut ID | 00
 #
 #   Categories: Normal, Glitch
 #   Normal ID   | 00
