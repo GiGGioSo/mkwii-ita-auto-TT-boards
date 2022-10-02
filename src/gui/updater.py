@@ -172,7 +172,7 @@ class Updater(QThread):
                                 f.write(rkg)
                 self.display_msg.emit(f"{track_name} took {time.time()-start_time_local} to update")
                 total_time += time.time()-start_time
-                self.display_msg.emit(f"Total Time Elapsed: {total_time}")
+                self.display_msg.emit(f"Total Time Elapsed: {total_time}\n")
                 log_out += f"Total Time Elapsed: {total_time}"
                 gs_track_column += gs.GS_TRACKS_INTERVAL
                 cat_n += 1
@@ -305,7 +305,7 @@ class Updater(QThread):
                 self.display_msg.emit(f"{track_name} took {time.time()-start_time_local} to update")
                 total_time += time.time()-start_time
                 self.display_msg.emit(f"Total Time Elapsed: {total_time}")
-                log_out += f"Total Time Elapsed: {total_time}"
+                log_out += f"Total Time Elapsed: {total_time}\n"
                 gs_track_column += gs.GS_TRACKS_INTERVAL
                 cat_n += 1
             gs.set_all_values(wks, full_gs)
