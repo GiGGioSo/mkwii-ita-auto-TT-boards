@@ -273,8 +273,8 @@ class Updater(QThread):
                         except:
                             old_time = datetime.timedelta()
                         if not (old_time == datetime.timedelta() 
-                            or (full_gs[row+jolly][gs_track_column+2] in ["TBA", "", "No"] and new_time <= old_time) 
-                            or (full_gs[row+jolly][gs_track_column+2] not in ["TBA", "", "No"] and new_time < old_time)):
+                            or (full_gs[row+jolly][gs_track_column+3] in ["TBA", "", "No"] and new_time <= old_time) 
+                            or (full_gs[row+jolly][gs_track_column+3] not in ["TBA", "", "No"] and new_time < old_time)):
                                 continue
                         log_out += f"Player Found: {player_name}, ID: {ID}, Row: {row+1}\n"
                         new_link = "https://chadsoft.co.uk/time-trials" + player_info["href"][:-3]+"html"
