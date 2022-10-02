@@ -97,6 +97,7 @@ class Updater(QThread):
                 row = 1 #Current row
                 start_time = time.time()
                 self.display_msg.emit("Connecting to Chadsoft...")
+                cat_name = str(cd.get_category_2(track_link,category_id))
                 if track_link == "02/0E380357AFFCFD8722329994885699D9927F8276/" and category_id == "00":
                     gs_track_column = gs_track_column - gs.GS_TRACKS_INTERVAL
                     cat_n = cat_n -1
@@ -110,8 +111,8 @@ class Updater(QThread):
                 track_lb = cd.get_leaderboard_page(track_link,category_id,flap=True) # Could do Async requests or put the requests on another thread but Chadsoft.co.uk is too bad of a site for it to work properly
                 track_name = track_lb["name"]
                 track_lb = track_lb["ghosts"]
-                self.display_msg.emit(f"Connected to the {track_name} leaderboard in {time.time()-start_time}.")
-                log_out += f"Connected to the {track_name} leaderboard in {time.time()-start_time}.\n"
+                self.display_msg.emit(f"Connected to the {track_name} {cat_name} leaderboard in {time.time()-start_time}.")
+                log_out += f"Connected to the {track_name} {cat_name} leaderboard in {time.time()-start_time}.\n"
                 start_time_local = time.time()
                 for player_info in track_lb:
                     if player_info["playerId"] in filtered_IDs:
@@ -130,7 +131,6 @@ class Updater(QThread):
 
                         player_name = full_gs[row][0]
                         self.display_msg.emit(f"Player Found: {player_name}, ID: {ID}, Row: {row+1}")
-                        log_out += f"Player Found: {player_name}, ID: {ID}, Row: {row+1}\n"
 
                         if self.isInterruptionRequested():
                             with open("log.txt","w") as f:
@@ -155,8 +155,8 @@ class Updater(QThread):
                                 continue
                         new_link = "https://chadsoft.co.uk/time-trials" + player_info["href"][:-3]+"html"
                         new_time = gs.get_timestring_from_timedelta_2(new_time,cat_n)
-                        self.display_msg.emit("  (NEW GHOSTS FOUND), " + track_name + ", category: " + str(cd.get_category_2(track_link,category_id)) + ", time: " + new_time + ", ghost_link: "+ new_link)
-                        log_out += "  (NEW GHOSTS FOUND), " + track_name + ", category: " + str(cd.get_category_2(track_link,category_id)) + ", time: " + new_time + ", ghost_link: "+ new_link+"\n"
+                        self.display_msg.emit("  (NEW GHOSTS FOUND), " + track_name + ", category: " + cat_name + ", time: " + new_time + ", ghost_link: "+ new_link)
+                        log_out += "  (NEW GHOSTS FOUND), " + track_name + ", category: " + cat_name + ", time: " + new_time + ", ghost_link: "+ new_link+"\n"
                         new_cell_link = "=HYPERLINK(\""+new_link+"\";\"Sì\")"
                         old_flap_vid_link = full_gs[row+jolly][gs_track_column+4] # Used to warn about possibly overwriting a TBA video
                         if old_flap_vid_link != "":
@@ -181,7 +181,7 @@ class Updater(QThread):
                 cat_n += 1
             gs.set_all_values(wks, full_gs)
             full_gs = gs.get_all_values(wks)
-            self.display_msg.emit(f"[SUCCESSFUL] UPDATED {track_name}, PROCEEDING WITH THE NEXT BLOCK...")
+            self.display_msg.emit(f"[SUCCESSFUL] Updated {track_name} {cat_name}, proceeding with the next track...")
             with open("log.txt","w") as f:
                 f.write(log_out)
         self.display_msg.emit("[FLAPS UPDATE FINISHED]")
