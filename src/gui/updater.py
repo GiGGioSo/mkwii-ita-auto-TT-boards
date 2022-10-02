@@ -149,6 +149,7 @@ class Updater(QThread):
                             or (full_gs[row+jolly][gs_track_column+2] in ["TBA", "", "No"] and new_time <= old_time) 
                             or (full_gs[row+jolly][gs_track_column+2] not in ["TBA", "", "No"] and new_time < old_time)):
                                 continue
+                        log_out += f"Player Found: {player_name}, ID: {ID}, Row: {row+1}\n"
                         new_link = "https://chadsoft.co.uk/time-trials" + player_info["href"][:-3]+"html"
                         new_time = gs.get_timestring_from_timedelta_2(new_time,cat_n)
                         self.display_msg.emit("  (NEW GHOSTS FOUND), " + track_name + ", category: " + cat_name + ", time: " + new_time + ", ghost_link: "+ new_link)
@@ -275,6 +276,7 @@ class Updater(QThread):
                             or (full_gs[row+jolly][gs_track_column+2] in ["TBA", "", "No"] and new_time <= old_time) 
                             or (full_gs[row+jolly][gs_track_column+2] not in ["TBA", "", "No"] and new_time < old_time)):
                                 continue
+                        log_out += f"Player Found: {player_name}, ID: {ID}, Row: {row+1}\n"
                         new_link = "https://chadsoft.co.uk/time-trials" + player_info["href"][:-3]+"html"
                         new_time = gs.get_timestring_from_timedelta_2(new_time,cat_n)
                         self.display_msg.emit("  (NEW GHOSTS FOUND), " + track_name + ", category: " + cat_name + ", time: " + new_time + ", ghost_link: "+ new_link)
@@ -286,8 +288,8 @@ class Updater(QThread):
                             self.display_msg.emit(f"      [Old Video Link found] {old_flap_vid_link}")
                             log_out += f"      [OLD VIDEO LINK FOUND] {old_flap_vid_link}\n"
                         full_gs[row+jolly][gs_track_column-1] = m2s.genRender(rkg_info)
-                        full_gs[row+jolly][gs_track_column] = cd.get_date_from_rkg(rkg_info)
                         full_gs[row+jolly][gs_track_column] = new_time
+                        full_gs[row+jolly][gs_track_column+1] = cd.get_date_from_rkg(rkg_info)
                         full_gs[row+jolly][gs_track_column+3] = new_cell_link
                         full_gs[row+jolly][gs_track_column+5] = ""
                         full_gs[row+jolly][gs_track_column+7] = cd.get_driver(player_info["driverId"])
