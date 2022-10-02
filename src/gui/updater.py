@@ -313,9 +313,6 @@ class Updater(QThread):
             self.display_msg.emit(f"[SUCCESSFUL] Updated {track_name} {cat_name}, proceeding with the next track...")
             with open("log.txt","w") as f:
                 f.write(log_out)
-        self.display_msg.emit("[FLAPS UPDATE FINISHED]")
-
-
         gs.set_all_values(wks, full_gs)
         with open("log.txt","w") as f:
             f.write(log_out)
