@@ -14,5 +14,11 @@ dist/
 create-release
 create-release.ps1
 
+*.txt
+
+*/ghosts_flap/
+*/tmp/
+*/ghosts_3lap/
+
 *.spec
 
