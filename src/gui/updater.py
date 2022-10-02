@@ -280,7 +280,7 @@ class Updater(QThread):
                         self.display_msg.emit("  (NEW GHOSTS FOUND), " + track_name + ", category: " + cat_name + ", time: " + new_time + ", ghost_link: "+ new_link)
                         log_out += "  (NEW GHOSTS FOUND), " + track_name + ", category: " + cat_name + ", time: " + new_time + ", ghost_link: "+ new_link+"\n"
                         new_cell_link = "=HYPERLINK(\""+new_link+"\";\"Sì\")"
-                        old_flap_vid_link = full_gs[row+jolly][gs_track_column+4] # Used to warn about possibly overwriting a TBA video
+                        old_flap_vid_link = full_gs[row+jolly][gs_track_column+5] # Used to warn about possibly overwriting a TBA video
                         rkg_info = cd.get_ghost_rkg(player_info["href"])
                         if old_flap_vid_link != "":
                             self.display_msg.emit(f"      [Old Video Link found] {old_flap_vid_link}")
