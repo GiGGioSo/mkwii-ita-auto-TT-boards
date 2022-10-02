@@ -474,6 +474,6 @@ class Updater(QThread):
             return -1
 
         if self.active_3lap: self.update_3laps()
-        elif self.active_flap: self.update_flaps()
-        elif self.active_unr: self.update_unrestricted_and_checks()
+        if self.active_flap: self.update_flaps()
+        if self.active_unr: self.update_unrestricted_and_checks()
         else: self.display_msg.emit("\n\n[NOTHING TO DO]\n\n")
