@@ -294,11 +294,11 @@ class Updater(QThread):
                         full_gs[row+jolly][gs_track_column+8] = cd.get_vehicle(player_info["vehicleId"])
                         full_gs[row+jolly][gs_track_column+9] = cd.get_controller(player_info["controller"])
                         if self.rkg_dl_3lap:
-                            try: os.mkdir("ghosts_flap")
+                            try: os.mkdir("ghosts_3lap")
                             except: pass
-                            try: os.mkdir("ghosts_flap/"+track_name)
+                            try: os.mkdir("ghosts_3lap/"+track_name)
                             except: pass
-                            with open("ghosts_flap/"+track_name+"/"+player_name.replace("*","")+".rkg","wb") as f:
+                            with open("ghosts_3lap/"+track_name+"/"+player_name.replace("*","")+".rkg","wb") as f:
                                 f.write(rkg_info)
                 self.display_msg.emit(f"{track_name} took {time.time()-start_time_local} to update")
                 total_time += time.time()-start_time
