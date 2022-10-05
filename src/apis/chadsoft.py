@@ -109,6 +109,17 @@ def get_category_2(track_link:str,category_id:str):
             case 1 : return "Shortcut"
             case 2 : return "Glitch"
 
+def get_driver_id_bin(rkg_file):
+    rkg_file = "{:08b}".format(int(rkg_file.hex(), 16))
+    return int(rkg_file[69:75],base=2)
+
+def get_vehicle_id_bin(rkg_file):
+    rkg_file = "{:08b}".format(int(rkg_file.hex(), 16))
+    return int(rkg_file[63:69],base=2)
+
+def get_controller_id_bin(rkg_file):
+    rkg_file = "{:08b}".format(int(rkg_file.hex(), 16))
+    return int(rkg_file[91:95],base=2)
 
 def get_date_from_rkg(rkg_file):
     rkg_file = "{:08b}".format(int(rkg_file.hex(), 16))
@@ -147,6 +158,11 @@ def get_ghost_link(ghost: str) -> str:
 def get_ghost_rkg(ghost: str) -> str:
     r = requests.get("https://www.chadsoft.co.uk/time-trials" + ghost)
     return r.content 
+
+def get_ghost_rkg_from_other_site(site_name, link):
+    match site_name:
+        case "discord": return requests.get(link).content
+        case "maschell": return requests.get(link.replace("ghostviewer","download")).content
 
 def get_vehicle(ID: int) -> str:
 
