@@ -2,6 +2,7 @@ import json
 import datetime
 from operator import index
 from textwrap import indent
+from tracemalloc import start
 import gspread
 import os
 import json
@@ -64,6 +65,7 @@ class Updater(QThread):
         gs_track_column = 2 + gs.GS_START_INDEX
         
         start_offset = self.track_skip_flap
+        t_display = start_offset
    
         IDs = [i[gs.ID_COLUMN] for i in full_gs[2:]]
         filtered_IDs_tuples = list(map(gs.get_jolly_and_purify_ID,IDs))
@@ -89,6 +91,7 @@ class Updater(QThread):
         for track_link in tracks:
             category_ids = RT_TRACKS[track_link]
             cat_n = 0
+            t_display += 1
             for category_id in category_ids:
                 row = 1 #Current row
                 start_time = time.time()
@@ -170,10 +173,10 @@ class Updater(QThread):
                             except: pass
                             with open("ghosts_flap/"+track_name+"/"+player_name.replace("*","")+".rkg","wb") as f:
                                 f.write(rkg)
-                self.display_msg.emit(f"{track_name} took {time.time()-start_time_local} to update")
+                self.display_msg.emit(f"{track_name} ({t_display}) took {time.time()-start_time_local} to update")
                 total_time += time.time()-start_time
                 self.display_msg.emit(f"Total Time Elapsed: {total_time}\n")
-                log_out += f"Total Time Elapsed: {total_time}"
+                log_out += f"Total Time Elapsed: {total_time}\n"
                 gs_track_column += gs.GS_TRACKS_INTERVAL
                 cat_n += 1
             gs.set_all_values(wks, full_gs)
@@ -199,6 +202,7 @@ class Updater(QThread):
         row = 1 #Current row
         
         start_offset = self.track_skip_3lap
+        t_display = start_offset
    
         IDs = [i[gs.ID_COLUMN] for i in full_gs[2:]]
         filtered_IDs_tuples = list(map(gs.get_jolly_and_purify_ID,IDs))
@@ -224,6 +228,7 @@ class Updater(QThread):
         for track_link in tracks:
             category_ids = RT_TRACKS[track_link]
             cat_n = 0
+            t_display += 1
             for category_id in category_ids:
                 row = 1 #Current row
                 start_time = time.time()
@@ -302,7 +307,7 @@ class Updater(QThread):
                             except: pass
                             with open("ghosts_3lap/"+track_name+"/"+player_name.replace("*","")+".rkg","wb") as f:
                                 f.write(rkg_info)
-                self.display_msg.emit(f"{track_name} took {time.time()-start_time_local} to update")
+                self.display_msg.emit(f"{track_name} ({t_display}) took {time.time()-start_time_local} to update")
                 total_time += time.time()-start_time
                 self.display_msg.emit(f"Total Time Elapsed: {total_time}")
                 log_out += f"Total Time Elapsed: {total_time}\n"
@@ -476,4 +481,4 @@ class Updater(QThread):
         if self.active_3lap: self.update_3laps()
         if self.active_flap: self.update_flaps()
         if self.active_unr: self.update_unrestricted_and_checks()
-        else: self.display_msg.emit("\n\n[NOTHING TO DO]\n\n")
+        self.display_msg.emit("\n\n[NOTHING TO DO]\n\n")
