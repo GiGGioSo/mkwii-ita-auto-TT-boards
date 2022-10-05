@@ -28,7 +28,7 @@ class MainWindow(QMainWindow):
 
         # 3laps options
         self.rkg_dl_3lap = QCheckBox("Download new Ghosts")
-        self.rkg_dl_3lap.setChecked(True)
+        self.rkg_dl_3lap.setChecked(False)
         self.check_2_3lap = QCheckBox("check 2")
         self.check_2_3lap.setChecked(True)
         self.check_3_3lap = QCheckBox("check 3")
@@ -55,7 +55,7 @@ class MainWindow(QMainWindow):
 
         # flap options
         self.rkg_dl_flap = QCheckBox("Download new Ghosts")
-        self.rkg_dl_flap.setChecked(True)
+        self.rkg_dl_flap.setChecked(False)
         self.check_2_flap = QCheckBox("check 2")
         self.check_2_flap.setChecked(True)
         self.check_3_flap = QCheckBox("check 3")

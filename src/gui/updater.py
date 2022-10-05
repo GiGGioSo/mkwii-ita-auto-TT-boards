@@ -55,6 +55,11 @@ class Updater(QThread):
         self.active_unr = active_unr
 
     def update_flaps(self, wks: gspread.worksheet.Worksheet = None):
+        if self.isInterruptionRequested():
+            self.stopped.emit()
+            try: rmtree("tmp/")
+            except: pass
+            return -1
         self.display_msg.emit("[FLAPs UPDATE STARTED]")
         log_out = ""
         total_time = 0
@@ -119,7 +124,7 @@ class Updater(QThread):
                         jolly = id_jolly[filtered_IDs.index(ID)]
                         row = unfiltered_IDs.index(ID)+2
                         if self.isInterruptionRequested():
-                            with open("log.txt","w") as f:
+                            with open("log_flap.txt","w") as f:
                                 f.write(log_out)
                             self.stopped.emit()
                             try:
@@ -132,7 +137,7 @@ class Updater(QThread):
                         self.display_msg.emit(f"Player Found: {player_name}, ID: {ID}, Row: {row+1}")
 
                         if self.isInterruptionRequested():
-                            with open("log.txt","w") as f:
+                            with open("log_flap.txt","w") as f:
                                 f.write(log_out)
                             self.stopped.emit()
                             try:
@@ -182,11 +187,16 @@ class Updater(QThread):
             gs.set_all_values(wks, full_gs)
             full_gs = gs.get_all_values(wks)
             self.display_msg.emit(f"[SUCCESSFUL] Updated {track_name} {cat_name}, proceeding with the next track...")
-            with open("log.txt","w") as f:
+            with open("log_flap.txt","w") as f:
                 f.write(log_out)
         self.display_msg.emit("[FLAPS UPDATE FINISHED]")
 
     def update_3laps(self, wks: gspread.worksheet.Worksheet = None):
+        if self.isInterruptionRequested():
+            self.stopped.emit()
+            try: rmtree("tmp/")
+            except: pass
+            return -1
         self.display_msg.emit("\n[3LAPs UPDATE STARTED]")
         total_time = 0
         log_out = ""
@@ -254,7 +264,7 @@ class Updater(QThread):
                         jolly = id_jolly[filtered_IDs.index(ID)]
                         row = unfiltered_IDs.index(ID)+2
                         if self.isInterruptionRequested():
-                            with open("log.txt","w") as f: f.write(log_out)
+                            with open("log_3lap.txt","w") as f: f.write(log_out)
                             self.stopped.emit()
                             try: rmtree("tmp/")
                             except: pass
@@ -264,7 +274,7 @@ class Updater(QThread):
                         self.display_msg.emit(f"Player Found: {player_name}, ID: {ID}, Row: {row+1}")
 
                         if self.isInterruptionRequested():
-                            with open("log.txt","w") as f: f.write(log_out)
+                            with open("log_3lap.txt","w") as f: f.write(log_out)
                             self.stopped.emit()
                             try: rmtree("tmp/")
                             except: pass
@@ -316,10 +326,10 @@ class Updater(QThread):
             gs.set_all_values(wks, full_gs)
             full_gs = gs.get_all_values(wks)
             self.display_msg.emit(f"[SUCCESSFUL] Updated {track_name} {cat_name}, proceeding with the next track...")
-            with open("log.txt","w") as f:
+            with open("log_3lap.txt","w") as f:
                 f.write(log_out)
         gs.set_all_values(wks, full_gs)
-        with open("log.txt","w") as f:
+        with open("log_3lap.txt","w") as f:
             f.write(log_out)
         self.display_msg.emit("\n[3LAPs UPDATE FINISHED]")
 
@@ -330,143 +340,154 @@ class Updater(QThread):
             if feedback:
                 self.display_msg.emit(feedback)
         full_gs = gs.get_all_values(wks)
+        track_interval = gs.GS_TRACKS_INTERVAL
 
         # After everything, check the unrestricted
         names = [i[0] for i in full_gs[2:]]
         row = 1
+
         for name in names:
             if self.isInterruptionRequested():
                 self.stopped.emit()
                 return -1
+            current_column = gs.GS_START_INDEX
             row += 1
             current_row = full_gs[row]
 
             complete_3lap_norm = True
             complete_3lap_unr = True
-
-            for trackId, categories in gs.RT_CATEGORIES.items():
-                if self.isInterruptionRequested():
-                    gs.set_all_values(wks, full_gs)
-                    self.stopped.emit()
-                    return -1
-                track_has_sc_glitch = False
-                for i in range(len(categories) - 1):
-                    try:
-                        this_gs_time = current_row[gs.get_track_column(trackId, categories[i])]
-                        this_time = gs.get_timedelta_from_timestring(this_gs_time)
-                    except:
-                        if categories[i] in [0, 2, 18, -1]: complete_3lap_norm = False
-                        continue
-
-                    if categories[i] in [16, 1]: track_has_sc_glitch = True
-
-                    try:
-                        next_gs_time = current_row[gs.get_track_column(trackId, categories[i+1])]
-                        next_time = gs.get_timedelta_from_timestring(next_gs_time)
-                    except:
-                        next_time = datetime.timedelta()
-
-                    if next_time == datetime.timedelta() or this_time < next_time:
-                        this_column = gs.get_track_column(trackId, categories[i])
-                        next_column = gs.get_track_column(trackId, categories[i+1])
-                        mii = gs.get_value_safely(full_gs, row, this_column-1)
-                        date = gs.get_date_from_gs_timestamp(gs.get_value_safely(full_gs, row, this_column+1))
-                        ghost = gs.get_value_safely(full_gs, row, this_column+3)
-                        video = gs.get_value_safely(full_gs, row, this_column+5)
-                        vehicle = gs.get_value_safely(full_gs, row, this_column+7)
-                        player = gs.get_value_safely(full_gs, row, this_column+8)
-                        controller = gs.get_value_safely(full_gs, row, this_column+9)
-
-                        full_gs[row][next_column-1] = mii
-                        full_gs[row][next_column] = this_gs_time
-                        full_gs[row][next_column+1] = date
-                        full_gs[row][next_column+3] = ghost
-                        full_gs[row][next_column+5] = video
-                        full_gs[row][next_column+7] = vehicle
-                        full_gs[row][next_column+8] = player
-                        full_gs[row][next_column+9] = controller
-                        self.display_msg.emit(f"[UNRESTRICTED_3LAP] Found at row: {row+1}, column: {next_column+1}")
-
-                if not track_has_sc_glitch: complete_3lap_unr = False
-
-            if complete_3lap_norm: complete_3lap_unr = True
-            full_gs[row][gs.CHECK_FULL_3LAP_NORMAL_COLUMN] = complete_3lap_norm
-            full_gs[row][gs.CHECK_FULL_3LAP_UNRESTRICTED_COLUMN] = complete_3lap_unr
-
-            if complete_3lap_norm: self.display_msg.emit(f"[3LAP NORMAL]       is complete at row {row+1}")
-            if complete_3lap_unr:  self.display_msg.emit(f"[3LAP UNRESTRICTED] is complete at row {row+1}")
-
-
-        self.display_msg.emit("[UPDATING...] Uploading data to Google Sheets")
-        gs.set_all_values(wks, full_gs)
-        self.display_msg.emit("\n[UNRESTRICTED_3LAPs UPDATE FINISHED]")
-
-        row = 1
-        for name in names:
-            if self.isInterruptionRequested():
-                self.stopped.emit()
-                return -1
-            row += 1
-            current_row = full_gs[row]
-
             complete_flap_norm = True
             complete_flap_unr = True
 
-            for trackId, categories in gs.RT_CATEGORIES.items():
+            for track_num, track_categories in list(enumerate(cd.RT_TRACKS.values())):
                 if self.isInterruptionRequested():
                     gs.set_all_values(wks, full_gs)
                     self.stopped.emit()
                     return -1
-                track_has_sc_glitch = False
-                for i in range(len(categories) - 1):
-                    try:
-                        this_gs_time = current_row[gs.get_track_column(trackId, categories[i]) + 2] # + 2 because the flap time is offset 2 from 3lap time
-                        this_time = gs.get_timedelta_from_timestring(this_gs_time)
-                    except:
-                        if categories[i] in [0, 2, 18, -1]: complete_flap_norm = False
-                        continue
+                length_track = len(track_categories)
+                if track_num == 2: length_track -= 1
+                if length_track == 1:   # No-SC, easy check
+                    current_3lap_time = current_row[current_column]
+                    current_flap_time = current_row[current_column+2]
+                    if current_3lap_time == "": complete_3lap_norm, complete_3lap_unr = False, False
+                    if current_flap_time == "": complete_flap_norm, complete_flap_unr = False, False
+                    current_column += track_interval
+                
+                elif length_track == 2:
+                    current_3lap_time = current_row[current_column]
+                    current_flap_time = current_row[current_column+2]
+                    sc_3lap_time = current_row[current_column+track_interval]
+                    sc_flap_time = current_row[current_column+2+track_interval]
+                    if current_3lap_time == "" and sc_3lap_time == "": complete_3lap_norm, complete_3lap_unr = False, False
+                    elif current_3lap_time == "" and sc_3lap_time != "": complete_3lap_norm = False
+                    elif current_3lap_time != "" and sc_3lap_time == "":
+                        current_row[current_column-1+track_interval] = current_row[current_column-1]
+                        current_row[current_column+track_interval]   = current_row[current_column]
+                        current_row[current_column+1+track_interval] = current_row[current_column+1]
+                        current_row[current_column+3+track_interval] = current_row[current_column+3]
+                        current_row[current_column+5+track_interval] = current_row[current_column+5]
+                        current_row[current_column+7+track_interval] = current_row[current_column+7]
+                        current_row[current_column+8+track_interval] = current_row[current_column+8]
+                        current_row[current_column+9+track_interval] = current_row[current_column+9]
+                    elif current_3lap_time != "" and sc_3lap_time != "":
+                        if gs.get_timedelta_from_timestring(current_3lap_time) < gs.get_timedelta_from_timestring(sc_3lap_time):
+                            current_row[current_column-1+track_interval] = current_row[current_column-1]
+                            current_row[current_column+track_interval]   = current_row[current_column]
+                            current_row[current_column+1+track_interval] = current_row[current_column+1]
+                            current_row[current_column+3+track_interval] = current_row[current_column+3]
+                            current_row[current_column+5+track_interval] = current_row[current_column+5]
+                            current_row[current_column+7+track_interval] = current_row[current_column+7]
+                            current_row[current_column+8+track_interval] = current_row[current_column+8]
+                            current_row[current_column+9+track_interval] = current_row[current_column+9]
+                        elif gs.get_timedelta_from_timestring(current_3lap_time) == gs.get_timedelta_from_timestring(sc_3lap_time):
+                            if current_row[current_column+5] == "" : current_row[current_column+5] = current_row[current_column+5+track_interval]
+                            elif current_row[current_column+5+track_interval] == "" : current_row[current_column+5+track_interval] = current_row[current_column+5]
 
-                    if categories[i] in [16, 1]: track_has_sc_glitch = True
+                    # If the player doesn't have a time, set the completion flag to False.
+                    # If the player does have a time and it's faster than the SC (or there's no SC in general), copy the time over the SC.
+                    # Special, rare case for videos, if the times are equal and one of the two doesn't have the video, put it up.
 
-                    try:
-                        next_gs_time = current_row[gs.get_track_column(trackId, categories[i+1]) + 2] # + 2 because the flap time is offset 2 from 3lap time
-                        next_time = gs.get_timedelta_from_timestring(next_gs_time)
-                    except:
-                        next_time = datetime.timedelta()
+                    if current_flap_time == "" and sc_flap_time == "": complete_flap_norm, complete_flap_unr = False, False
+                    elif current_flap_time == "" and sc_flap_time != "": complete_flap_norm = False
+                    elif current_flap_time != "" and sc_flap_time == "":
+                        current_row[current_column+2+track_interval] = current_row[current_column+2]
+                        current_row[current_column+4+track_interval] = current_row[current_column+4]
+                        current_row[current_column+6+track_interval] = current_row[current_column+6]
+                    elif current_flap_time != "" and sc_flap_time != "":
+                        if gs.get_timedelta_from_timestring(current_flap_time) < gs.get_timedelta_from_timestring(sc_flap_time):
+                            current_row[current_column+2+track_interval] = current_row[current_column+2]
+                            current_row[current_column+4+track_interval] = current_row[current_column+4]
+                            current_row[current_column+6+track_interval] = current_row[current_column+6]
+                        elif gs.get_timedelta_from_timestring(current_flap_time) == gs.get_timedelta_from_timestring(sc_flap_time):
+                            if current_row[current_column+6] == "" : current_row[current_column+6] = current_row[current_column+6+track_interval]
+                            elif current_row[current_column+6+track_interval] == "" : current_row[current_column+6+track_interval] = current_row[current_column+6]
 
-                    if next_time == datetime.timedelta() or this_time < next_time:
-                        this_column = gs.get_track_column(trackId, categories[i])
-                        next_column = gs.get_track_column(trackId, categories[i+1])
+                    current_column += track_interval * 2
+                
+                elif length_track == 3:
+                    for i in range(2):
+                        current_3lap_time = current_row[current_column]
+                        current_flap_time = current_row[current_column+2]
+                        sc_3lap_time = current_row[current_column+track_interval]
+                        sc_flap_time = current_row[current_column+2+track_interval]
+                        if current_3lap_time == "" and sc_3lap_time == "": complete_3lap_norm, complete_3lap_unr = False, False
+                        elif current_3lap_time == "" and sc_3lap_time != "": complete_3lap_norm = False
+                        elif current_3lap_time != "" and sc_3lap_time == "":
+                            current_row[current_column-1+track_interval] = current_row[current_column-1]
+                            current_row[current_column+track_interval]   = current_row[current_column]
+                            current_row[current_column+1+track_interval] = current_row[current_column+1]
+                            current_row[current_column+3+track_interval] = current_row[current_column+3]
+                            current_row[current_column+5+track_interval] = current_row[current_column+5]
+                            current_row[current_column+7+track_interval] = current_row[current_column+7]
+                            current_row[current_column+8+track_interval] = current_row[current_column+8]
+                            current_row[current_column+9+track_interval] = current_row[current_column+9]
+                        elif current_3lap_time != "" and sc_3lap_time != "":
+                            if gs.get_timedelta_from_timestring(current_3lap_time) < gs.get_timedelta_from_timestring(sc_3lap_time):
+                                current_row[current_column-1+track_interval] = current_row[current_column-1]
+                                current_row[current_column+track_interval]   = current_row[current_column]
+                                current_row[current_column+1+track_interval] = current_row[current_column+1]
+                                current_row[current_column+3+track_interval] = current_row[current_column+3]
+                                current_row[current_column+5+track_interval] = current_row[current_column+5]
+                                current_row[current_column+7+track_interval] = current_row[current_column+7]
+                                current_row[current_column+8+track_interval] = current_row[current_column+8]
+                                current_row[current_column+9+track_interval] = current_row[current_column+9]
+                            elif gs.get_timedelta_from_timestring(current_3lap_time) == gs.get_timedelta_from_timestring(sc_3lap_time):
+                                if current_row[current_column+5] == "" : current_row[current_column+5] = current_row[current_column+5+track_interval]
+                                elif current_row[current_column+5+track_interval] == "" : current_row[current_column+5+track_interval] = current_row[current_column+5]
 
-                        ghost = gs.get_value_safely(full_gs, row, this_column+4)
-                        video = gs.get_value_safely(full_gs, row, this_column+6)
+                        if current_flap_time == "" and sc_flap_time == "": complete_flap_norm, complete_flap_unr = False, False
+                        elif current_flap_time == "" and sc_flap_time != "": complete_flap_norm = False
+                        elif current_flap_time != "" and sc_flap_time == "":
+                            current_row[current_column+2+track_interval] = current_row[current_column+2]
+                            current_row[current_column+4+track_interval] = current_row[current_column+4]
+                            current_row[current_column+6+track_interval] = current_row[current_column+6]
+                        elif current_flap_time != "" and sc_flap_time != "":
+                            if gs.get_timedelta_from_timestring(current_flap_time) < gs.get_timedelta_from_timestring(sc_flap_time):
+                                current_row[current_column+2+track_interval] = current_row[current_column+2]
+                                current_row[current_column+4+track_interval] = current_row[current_column+4]
+                                current_row[current_column+6+track_interval] = current_row[current_column+6]
+                            elif gs.get_timedelta_from_timestring(current_flap_time) == gs.get_timedelta_from_timestring(sc_flap_time):
+                                if current_row[current_column+6] == "" : current_row[current_column+6] = current_row[current_column+6+track_interval]
+                                elif current_row[current_column+6+track_interval] == "" : current_row[current_column+6+track_interval] = current_row[current_column+6]
 
-                        full_gs[row][next_column+2] = this_gs_time
-                        full_gs[row][next_column+4] = ghost
-                        full_gs[row][next_column+6] = video
-                        self.display_msg.emit(f"[UNRESTRICTED_FLAP] Found at row: {row+1}, column: {next_column+3}") # +3 instead of +1 for the offset
+                        # Runs the 2 Category code twice so it checks SC and Glitch in an easier to understand way
 
-                if not track_has_sc_glitch: complete_flap_unr = False
+                        if i == 0: current_column += track_interval
+                        elif i == 1: current_column += track_interval * 2
 
-            if complete_flap_norm: complete_flap_unr = True
-            full_gs[row][gs.CHECK_FULL_FLAP_NORMAL_COLUMN] = complete_flap_norm
-            full_gs[row][gs.CHECK_FULL_FLAP_UNRESTRICTED_COLUMN] = complete_flap_unr
+            current_row[1] = complete_3lap_norm
+            current_row[2] = complete_3lap_unr
+            current_row[3] = complete_flap_norm
+            current_row[4] = complete_flap_unr
 
+            if complete_3lap_norm: self.display_msg.emit(f"[3LAP NORMAL]       is complete at row {row+1}")
+            if complete_3lap_unr:  self.display_msg.emit(f"[3LAP UNRESTRICTED] is complete at row {row+1}")
             if complete_flap_norm: self.display_msg.emit(f"[FLAP NORMAL]       is complete at row {row+1}")
             if complete_flap_unr:  self.display_msg.emit(f"[FLAP UNRESTRICTED] is complete at row {row+1}")
 
         self.display_msg.emit("[UPDATING...] Uploading data to Google Sheets")
         gs.set_all_values(wks, full_gs)
-        self.display_msg.emit("\n[UNRESTRICTED_FLAP UPDATE FINISHED]")
-
-    def update_everything(self):
-        self.display_msg.emit("\n[UPDATE OF EVERYTHING STARTED]")
-        wks, feedback = gs.get_worksheet(SERVICE_KEY_FILENAME, GOOGLE_SHEET_KEY, WORKSHEET_NAME)
-        if feedback: self.display_msg.emit(feedback)
-        exit_code = self.update_3laps(wks)
-        if exit_code == -1: return -1
-        self.update_unrestricted_and_checks(wks)
-        self.display_msg.emit("\n[UPDATE OF EVERYTHING FINISHED]")
+        self.display_msg.emit("\n[FINISHED]")
 
     def run(self):
 

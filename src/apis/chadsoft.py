@@ -38,7 +38,7 @@ RT_TRACKS = {
     "12/418099824AF6BF1CD7F8BB44F61E3A9CC3007DAE/" : CATEGORY_IDS["Case_Normal_Glitch"],          # rWS   (NO-SC/G)    GCN Stadio di Waluigi
     "15/4EC538065FDC8ACF49674300CBDEC5B80CC05A0D/" : CATEGORY_IDS["Case_Normal_Shortcut"],        # rDH   (NO-SC/SC)   DS Deserto Picchiasol
     "1E/A4BEA41BE83D816F793F3FAD97D268F71AD99BF9/" : CATEGORY_IDS["Case_Normal_Shortcut"],        # rBC3  (NO-SC/SC)   GBA Castello di Bowser 3
-    "1D/692D566B05434D8C66A55BDFF486698E0FC96095/" : CATEGORY_IDS["Case_Normal_Shortcut_Glitch"],          # rDKJP (NO-SC/SC/G) N64 Viale Giungla DK
+    "1D/692D566B05434D8C66A55BDFF486698E0FC96095/" : CATEGORY_IDS["Case_Normal_Shortcut_Glitch"], # rDKJP (NO-SC/SC/G) N64 Viale Giungla DK
     "11/1941A29AD2E7B7BBA8A29E6440C95EF5CF76B01D/" : CATEGORY_IDS["Case_Normal_Shortcut"],        # rMC   (NO-SC/SC)   GCN Circuito di Mario
     "18/077111B996E5C4F47D20EC29C2938504B53A8E76/" : CATEGORY_IDS["Case_Normal"],                 # rMC3               SNES Circuito di Mario 3
     "16/F9A62BEF04CC8F499633E4023ACC7675A92771F0/" : CATEGORY_IDS["Case_Normal"],                 # rPG                DS Giardino di Peach
