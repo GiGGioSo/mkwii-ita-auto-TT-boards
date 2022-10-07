@@ -347,6 +347,8 @@ class Updater(QThread):
         row = 1
 
         for name in names:
+            if "*" in name:
+                continue
             if self.isInterruptionRequested():
                 self.stopped.emit()
                 return -1
