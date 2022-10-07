@@ -178,7 +178,7 @@ class Updater(QThread):
                             except: pass
                             with open("ghosts_flap/"+track_name+"/"+player_name.replace("*","")+".rkg","wb") as f:
                                 f.write(rkg)
-                self.display_msg.emit(f"{track_name} {cat_name} ({t_display}) took {time.time()-start_time_local} to update")
+                self.display_msg.emit(f"{track_name} {cat_name} took {time.time()-start_time_local} to update")
                 total_time += time.time()-start_time
                 self.display_msg.emit(f"Total Time Elapsed: {total_time}\n")
                 log_out += f"Total Time Elapsed: {total_time}\n"
@@ -186,7 +186,7 @@ class Updater(QThread):
                 cat_n += 1
             gs.set_all_values(wks, full_gs)
             full_gs = gs.get_all_values(wks)
-            self.display_msg.emit(f"[SUCCESSFUL] Updated {track_name}, proceeding with the next track...")
+            self.display_msg.emit(f"[SUCCESSFUL] Updated ({t_display}) {track_name}, proceeding with the next track...")
             with open("log_flap.txt","w") as f:
                 f.write(log_out)
         self.display_msg.emit("[FLAPS UPDATE FINISHED]")
