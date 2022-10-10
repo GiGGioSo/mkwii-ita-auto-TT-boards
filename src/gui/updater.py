@@ -1,3 +1,4 @@
+from array import array
 import json
 import datetime
 from operator import index
@@ -337,6 +338,44 @@ class Updater(QThread):
             f.write(log_out)
         self.display_msg.emit("\n[3LAPs UPDATE FINISHED]")
 
+    def info_fill(time_arr:array,links_arr:array):
+        stuff_to_do_check = [0,0,0,0,0,0,0,0,0,0]
+        if "chadsoft" in time_arr[0].lower() or time_arr[0] == "": stuff_to_do_check[0] = 1
+        if str(time_arr[1]).lower() == "sconosciuto" or str(time_arr[1]).lower() == "": stuff_to_do_check[1] = 1
+        if time_arr[2] == "" or time_arr[2].lower() == "sconosciuto": stuff_to_do_check[2] = 1
+        if time_arr[3] == "" or time_arr[3].lower() == "sconosciuto": stuff_to_do_check[3] = 1
+        if time_arr[4] == "" or time_arr[4].lower() == "sconosciuto": stuff_to_do_check[4] = 1
+        if len(time_arr) > 5:
+            if "chadsoft" in time_arr[5].lower() or time_arr[5] == "": stuff_to_do_check[5] = 1
+            if str(time_arr[6]).lower() == "sconosciuto" or str(time_arr[6]).lower() == "": stuff_to_do_check[6] = 1
+            if time_arr[7] == "" or time_arr[7].lower() == "sconosciuto": stuff_to_do_check[7] = 1
+            if time_arr[8] == "" or time_arr[8].lower() == "sconosciuto": stuff_to_do_check[8] = 1
+            if time_arr[9] == "" or time_arr[9].lower() == "sconosciuto": stuff_to_do_check[9] = 1
+
+        if stuff_to_do_check != [0,0,0,0,0,0,0,0,0,0]:
+            if "chadsoft" in links_arr[0].lower(): rkg = cd.get_ghost_rkg("/rkgd/"+links_arr[0].split("\"")[1].split("/rkgd/")[1][:-4]+"rkg")
+            elif "discord" in links_arr[0].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="discord",link=links_arr[0].split("\"")[1])
+            elif "maschell" in links_arr[0].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="maschell",link=links_arr[0].split("\"")[1])
+            else: pass
+            
+            if "chadsoft" in links_arr[1].lower(): rkg_sc = cd.get_ghost_rkg("/rkgd/"+links_arr[1].split("\"")[1].split("/rkgd/")[1][:-4]+"rkg")
+            elif "discord" in links_arr[1].lower(): rkg_sc = cd.get_ghost_rkg_from_other_site(site_name="discord",link=links_arr[1].split("\"")[1])
+            elif "maschell" in links_arr[1].lower(): rkg_sc = cd.get_ghost_rkg_from_other_site(site_name="maschell",link=links_arr[1].split("\"")[1])
+            else: pass
+
+            if stuff_to_do_check[0] == 1: time_arr[0] = m2s.genRender(rkg)
+            if stuff_to_do_check[1] == 1: time_arr[1] = cd.get_date_from_rkg(rkg)
+            if stuff_to_do_check[2] == 1: time_arr[2] = cd.get_driver(cd.get_driver_id_bin(rkg))
+            if stuff_to_do_check[3] == 1: time_arr[3] = cd.get_vehicle(cd.get_vehicle_id_bin(rkg))
+            if stuff_to_do_check[4] == 1: time_arr[4] = cd.get_controller(cd.get_controller_id_bin(rkg))
+            if stuff_to_do_check[5] == 1: time_arr[5] = m2s.genRender(rkg_sc)
+            if stuff_to_do_check[6] == 1: time_arr[6] = cd.get_date_from_rkg(rkg_sc)
+            if stuff_to_do_check[7] == 1: time_arr[7] = cd.get_driver(cd.get_driver_id_bin(rkg_sc))
+            if stuff_to_do_check[8] == 1: time_arr[8] = cd.get_vehicle(cd.get_vehicle_id_bin(rkg_sc))
+            if stuff_to_do_check[9] == 1: time_arr[9] = cd.get_controller(cd.get_controller_id_bin(rkg_sc))
+
+        return time_arr
+
     def update_unrestricted_and_checks(self, wks: gspread.worksheet.Worksheet = None):
         self.display_msg.emit("\n[UNRESTRICTED UPDATE STARTED]")
         if wks == None: 
@@ -373,37 +412,26 @@ class Updater(QThread):
                 length_track = len(track_categories)
                 if track_num == 2: length_track -= 1
                 if length_track == 1:   # No-SC, easy check
-                    stuff_to_do_check = [0,0,0,0,0]
                     current_3lap_time = current_row[current_column]
                     current_flap_time = current_row[current_column+2]
 
                     if current_3lap_time == "": complete_3lap_norm, complete_3lap_unr = False, False
                     elif current_3lap_time != "" and "sì" in current_row[current_column+3].lower():
+                        input_time_arr = [current_row[current_column-1],current_row[current_column+1],current_row[current_column+7],current_row[current_column+8],current_row[current_column+9]]
+                        link_arr = [current_row[current_column+3]]
+                        output_time_arr = self.info_fill(time_arr=input_time_arr,link_arr=link_arr)
+                        if output_time_arr == input_time_arr or output_time_arr == "": pass
+                        else:
+                            current_row[current_column-1] = output_time_arr[0]
+                            current_row[current_column+1] = output_time_arr[1]
+                            current_row[current_column+7] = output_time_arr[2]
+                            current_row[current_column+8] = output_time_arr[3]
+                            current_row[current_column+9] = output_time_arr[4]
                         
-                        if "chadsoft" in current_row[current_column-1].lower() or current_row[current_column-1] == "": current_row[current_column-1] = stuff_to_do_check[0] = 1
-                        if str(current_row[current_column+1]).lower() == "sconosciuto" or str(current_row[current_column+1]).lower() == "": stuff_to_do_check[1] = 1
-                        if current_row[current_column+7] == "" or current_row[current_column+7].lower() == "sconosciuto": stuff_to_do_check[2] = 1
-                        if current_row[current_column+8] == "" or current_row[current_column+8].lower() == "sconosciuto": stuff_to_do_check[3] = 1
-                        if current_row[current_column+9] == "" or current_row[current_column+9].lower() == "sconosciuto": stuff_to_do_check[4] = 1
-
-                    if stuff_to_do_check != [0,0,0,0,0]:
-
-                        if "chadsoft" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg("/rkgd/"+current_row[current_column+3].split("\"")[1].split("/rkgd/")[1][:-4]+"rkg")
-                        elif "discord" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="discord",link=current_row[current_column+3].split("\"")[1])
-                        elif "maschell" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="maschell",link=current_row[current_column+3].split("\"")[1])
-                        else: pass
-
-                        if stuff_to_do_check[0] == 1: current_row[current_column-1] = m2s.genRender(rkg)
-                        if stuff_to_do_check[1] == 1: current_row[current_column+1] = cd.get_date_from_rkg(rkg)
-                        if stuff_to_do_check[2] == 1: current_row[current_column+7] = cd.get_driver(cd.get_driver_id_bin(rkg))
-                        if stuff_to_do_check[3] == 1: current_row[current_column+8] = cd.get_vehicle(cd.get_vehicle_id_bin(rkg))
-                        if stuff_to_do_check[4] == 1: current_row[current_column+9] = cd.get_controller(cd.get_controller_id_bin(rkg))
-
                     if current_flap_time == "": complete_flap_norm, complete_flap_unr = False, False
                     current_column += track_interval
                 
                 elif length_track == 2:
-                    stuff_to_do_check = [0,0,0,0,0,0,0,0,0,0]
                     current_3lap_time = current_row[current_column]
                     current_flap_time = current_row[current_column+2]
                     sc_3lap_time = current_row[current_column+track_interval]
@@ -411,74 +439,53 @@ class Updater(QThread):
                     if current_3lap_time == "" and sc_3lap_time == "": complete_3lap_norm, complete_3lap_unr = False, False
                     elif current_3lap_time == "" and sc_3lap_time != "":
                         complete_3lap_norm = False
-                        if "sì" in current_row[current_column+3+track_interval].lower():
-                            if "chadsoft" in current_row[current_column-1+track_interval].lower() or current_row[current_column-1+track_interval] == "": current_row[current_column-1+track_interval] = stuff_to_do_check[5] = 1
-                            if str(current_row[current_column+1+track_interval]).lower() == "sconosciuto" or str(current_row[current_column+1+track_interval]).lower(): stuff_to_do_check[6] = 1
-                            if current_row[current_column+7+track_interval] == "" or current_row[current_column+7+track_interval].lower() == "sconosciuto": stuff_to_do_check[7] = 1
-                            if current_row[current_column+8+track_interval] == "" or current_row[current_column+8+track_interval].lower() == "sconosciuto": stuff_to_do_check[8] = 1
-                            if current_row[current_column+9+track_interval] == "" or current_row[current_column+9+track_interval].lower() == "sconosciuto": stuff_to_do_check[9] = 1
 
-                        if stuff_to_do_check != [0,0,0,0,0,0,0,0,0,0]:
-                            if "chadsoft" in current_row[current_column+3+track_interval].lower(): rkg = cd.get_ghost_rkg("/rkgd/"+current_row[current_column+3+track_interval].split("\"")[1].split("/rkgd/")[1][:-4]+"rkg")
-                            elif "discord" in current_row[current_column+3+track_interval].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="discord",link=current_row[current_column+3+track_interval].split("\"")[1])
-                            elif "maschell" in current_row[current_column+3+track_interval].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="maschell",link=current_row[current_column+3+track_interval].split("\"")[1])
-                            else: pass
-
-                            if stuff_to_do_check[5] == 1: current_row[current_column-1+track_interval] = m2s.genRender(rkg)
-                            if stuff_to_do_check[6] == 1: current_row[current_column+1+track_interval] = cd.get_date_from_rkg(rkg)
-                            if stuff_to_do_check[7] == 1: current_row[current_column+7+track_interval] = cd.get_driver(cd.get_driver_id_bin(rkg))
-                            if stuff_to_do_check[8] == 1: current_row[current_column+8+track_interval] = cd.get_vehicle(cd.get_vehicle_id_bin(rkg))
-                            if stuff_to_do_check[9] == 1: current_row[current_column+9+track_interval] = cd.get_controller(cd.get_controller_id_bin(rkg))
-
+                        input_time_arr = [current_row[current_column-1+track_interval],current_row[current_column+1+track_interval],current_row[current_column+7+track_interval],current_row[current_column+8+track_interval],current_row[current_column+9+track_interval]]
+                        link_arr = [current_row[current_column+3+track_interval]]
+                        output_time_arr = self.info_fill(time_arr=input_time_arr,link_arr=link_arr)
+                        if output_time_arr == input_time_arr or output_time_arr == "": pass
+                        else:
+                            current_row[current_column-1+track_interval] = output_time_arr[0]
+                            current_row[current_column+1+track_interval] = output_time_arr[1]
+                            current_row[current_column+7+track_interval] = output_time_arr[2]
+                            current_row[current_column+8+track_interval] = output_time_arr[3]
+                            current_row[current_column+9+track_interval] = output_time_arr[4]
+                        
                     elif current_3lap_time != "" and sc_3lap_time == "":
-                        if "sì" in current_row[current_column+3].lower():
-                            if "chadsoft" in current_row[current_column-1].lower() or current_row[current_column-1] == "": current_row[current_column-1] = stuff_to_do_check[0] = 1
-                            if str(current_row[current_column+1]).lower() == "sconosciuto" or str(current_row[current_column+1]).lower() == "": stuff_to_do_check[1] = 1
-                            if current_row[current_column+7] == "" or current_row[current_column+7].lower() == "sconosciuto": stuff_to_do_check[2] = 1
-                            if current_row[current_column+8] == "" or current_row[current_column+8].lower() == "sconosciuto": stuff_to_do_check[3] = 1
-                            if current_row[current_column+9] == "" or current_row[current_column+9].lower() == "sconosciuto": stuff_to_do_check[4] = 1
+                        
+                        input_time_arr = [current_row[current_column-1],current_row[current_column+1],current_row[current_column+7],current_row[current_column+8],current_row[current_column+9]]
+                        link_arr = [current_row[current_column+3]]
+                        output_time_arr = self.info_fill(time_arr=input_time_arr,link_arr=link_arr)
+                        if output_time_arr == input_time_arr or output_time_arr == "": pass
+                        else:
+                            current_row[current_column-1] = output_time_arr[0]
+                            current_row[current_column+1] = output_time_arr[1]
+                            current_row[current_column+7] = output_time_arr[2]
+                            current_row[current_column+8] = output_time_arr[3]
+                            current_row[current_column+9] = output_time_arr[4]
 
-                        if stuff_to_do_check != [0,0,0,0,0,0,0,0,0,0]:
-                            if "chadsoft" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg("/rkgd/"+current_row[current_column+3].split("\"")[1].split("/rkgd/")[1][:-4]+"rkg")
-                            elif "discord" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="discord",link=current_row[current_column+3].split("\"")[1])
-                            elif "maschell" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="maschell",link=current_row[current_column+3].split("\"")[1])
-                            else: pass
-
-                            if stuff_to_do_check[0] == 1: current_row[current_column-1] = m2s.genRender(rkg)
-                            if stuff_to_do_check[1] == 1: current_row[current_column+1] = cd.get_date_from_rkg(rkg)
-                            if stuff_to_do_check[2] == 1: current_row[current_column+7] = cd.get_driver(cd.get_driver_id_bin(rkg))
-                            if stuff_to_do_check[3] == 1: current_row[current_column+8] = cd.get_vehicle(cd.get_vehicle_id_bin(rkg))
-                            if stuff_to_do_check[4] == 1: current_row[current_column+9] = cd.get_controller(cd.get_controller_id_bin(rkg))
-
-                        current_row[current_column-1] = current_row[current_column-1]
-                        current_row[current_column]   = current_row[current_column]
-                        current_row[current_column+1] = current_row[current_column+1]
-                        current_row[current_column+3] = current_row[current_column+3]
-                        current_row[current_column+5] = current_row[current_column+5]
-                        current_row[current_column+7] = current_row[current_column+7]
-                        current_row[current_column+8] = current_row[current_column+8]
-                        current_row[current_column+9] = current_row[current_column+9]
+                        current_row[current_column-1+track_interval] = current_row[current_column-1]
+                        current_row[current_column+track_interval]   = current_row[current_column]
+                        current_row[current_column+1+track_interval] = current_row[current_column+1]
+                        current_row[current_column+3+track_interval] = current_row[current_column+3]
+                        current_row[current_column+5+track_interval] = current_row[current_column+5]
+                        current_row[current_column+7+track_interval] = current_row[current_column+7]
+                        current_row[current_column+8+track_interval] = current_row[current_column+8]
+                        current_row[current_column+9+track_interval] = current_row[current_column+9]
                         
                     elif current_3lap_time != "" and sc_3lap_time != "":
                         if gs.get_timedelta_from_timestring(current_3lap_time) < gs.get_timedelta_from_timestring(sc_3lap_time):
-                            if "sì" in current_row[current_column+3].lower():
-                                if "chadsoft" in current_row[current_column-1].lower() or current_row[current_column-1] == "": current_row[current_column-1] = stuff_to_do_check[0] = 1
-                                if str(current_row[current_column+1]).lower() == "sconosciuto" or str(current_row[current_column+1]).lower() == "": stuff_to_do_check[1] = 1
-                                if current_row[current_column+7] == "" or current_row[current_column+7].lower() == "sconosciuto": stuff_to_do_check[2] = 1
-                                if current_row[current_column+8] == "" or current_row[current_column+8].lower() == "sconosciuto": stuff_to_do_check[3] = 1
-                                if current_row[current_column+9] == "" or current_row[current_column+9].lower() == "sconosciuto": stuff_to_do_check[4] = 1
-
-                            if stuff_to_do_check != [0,0,0,0,0,0,0,0,0,0]:
-                                if "chadsoft" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg("/rkgd/"+current_row[current_column+3].split("\"")[1].split("/rkgd/")[1][:-4]+"rkg")
-                                elif "discord" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="discord",link=current_row[current_column+3].split("\"")[1])
-                                elif "maschell" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="maschell",link=current_row[current_column+3].split("\"")[1])
-                                else: pass
-
-                                if stuff_to_do_check[0] == 1: current_row[current_column-1] = m2s.genRender(rkg)
-                                if stuff_to_do_check[1] == 1: current_row[current_column+1] = cd.get_date_from_rkg(rkg)
-                                if stuff_to_do_check[2] == 1: current_row[current_column+7] = cd.get_driver(cd.get_driver_id_bin(rkg))
-                                if stuff_to_do_check[3] == 1: current_row[current_column+8] = cd.get_vehicle(cd.get_vehicle_id_bin(rkg))
-                                if stuff_to_do_check[4] == 1: current_row[current_column+9] = cd.get_controller(cd.get_controller_id_bin(rkg))
+                            
+                            input_time_arr = [current_row[current_column-1],current_row[current_column+1],current_row[current_column+7],current_row[current_column+8],current_row[current_column+9]]
+                            link_arr = [current_row[current_column+3]]
+                            output_time_arr = self.info_fill(time_arr=input_time_arr,link_arr=link_arr)
+                            if output_time_arr == input_time_arr or output_time_arr == "": pass
+                            else:
+                                current_row[current_column-1] = output_time_arr[0]
+                                current_row[current_column+1] = output_time_arr[1]
+                                current_row[current_column+7] = output_time_arr[2]
+                                current_row[current_column+8] = output_time_arr[3]
+                                current_row[current_column+9] = output_time_arr[4]
                                 
                             current_row[current_column-1+track_interval] = current_row[current_column-1]
                             current_row[current_column+track_interval]   = current_row[current_column]
@@ -488,25 +495,19 @@ class Updater(QThread):
                             current_row[current_column+7+track_interval] = current_row[current_column+7]
                             current_row[current_column+8+track_interval] = current_row[current_column+8]
                             current_row[current_column+9+track_interval] = current_row[current_column+9]
+
                         elif gs.get_timedelta_from_timestring(current_3lap_time) == gs.get_timedelta_from_timestring(sc_3lap_time):
-                            if "sì" in current_row[current_column+3].lower():
-                                if "chadsoft" in current_row[current_column-1].lower() or current_row[current_column-1] == "": current_row[current_column-1] = stuff_to_do_check[0] = 1
-                                if str(current_row[current_column+1]).lower() == "sconosciuto" or str(current_row[current_column+1]).lower() == "": stuff_to_do_check[1] = 1
-                                if current_row[current_column+7] == "" or current_row[current_column+7].lower() == "sconosciuto": stuff_to_do_check[2] = 1
-                                if current_row[current_column+8] == "" or current_row[current_column+8].lower() == "sconosciuto": stuff_to_do_check[3] = 1
-                                if current_row[current_column+9] == "" or current_row[current_column+9].lower() == "sconosciuto": stuff_to_do_check[4] = 1
-
-                            if stuff_to_do_check != [0,0,0,0,0,0,0,0,0,0]:
-                                if "chadsoft" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg("/rkgd/"+current_row[current_column+3].split("\"")[1].split("/rkgd/")[1][:-4]+"rkg")
-                                elif "discord" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="discord",link=current_row[current_column+3].split("\"")[1])
-                                elif "maschell" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="maschell",link=current_row[current_column+3].split("\"")[1])
-                                else: pass
-
-                                if stuff_to_do_check[0] == 1: current_row[current_column-1] = m2s.genRender(rkg)
-                                if stuff_to_do_check[1] == 1: current_row[current_column+1] = cd.get_date_from_rkg(rkg)
-                                if stuff_to_do_check[2] == 1: current_row[current_column+7] = cd.get_driver(cd.get_driver_id_bin(rkg))
-                                if stuff_to_do_check[3] == 1: current_row[current_column+8] = cd.get_vehicle(cd.get_vehicle_id_bin(rkg))
-                                if stuff_to_do_check[4] == 1: current_row[current_column+9] = cd.get_controller(cd.get_controller_id_bin(rkg))
+                            
+                            input_time_arr = [current_row[current_column-1],current_row[current_column+1],current_row[current_column+7],current_row[current_column+8],current_row[current_column+9]]
+                            link_arr = [current_row[current_column+3]]
+                            output_time_arr = self.info_fill(time_arr=input_time_arr,link_arr=link_arr)
+                            if output_time_arr == input_time_arr or output_time_arr == "": pass
+                            else:
+                                current_row[current_column-1] = output_time_arr[0]
+                                current_row[current_column+1] = output_time_arr[1]
+                                current_row[current_column+7] = output_time_arr[2]
+                                current_row[current_column+8] = output_time_arr[3]
+                                current_row[current_column+9] = output_time_arr[4]
                                 
                             current_row[current_column-1+track_interval] = current_row[current_column-1]
                             current_row[current_column+track_interval]   = current_row[current_column]
@@ -520,41 +521,22 @@ class Updater(QThread):
                             elif current_row[current_column+5+track_interval] == "" : current_row[current_column+5+track_interval] = current_row[current_column+5]
 
                         else:
-                            if "sì" in current_row[current_column+3].lower():
-                                if "chadsoft" in current_row[current_column-1].lower() or current_row[current_column-1] == "": current_row[current_column-1] = stuff_to_do_check[0] = 1
-                                if str(current_row[current_column+1]).lower() == "sconosciuto" or str(current_row[current_column+1]).lower() == "": stuff_to_do_check[1] = 1
-                                if current_row[current_column+7] == "" or current_row[current_column+7].lower() == "sconosciuto": stuff_to_do_check[2] = 1
-                                if current_row[current_column+8] == "" or current_row[current_column+8].lower() == "sconosciuto": stuff_to_do_check[3] = 1
-                                if current_row[current_column+9] == "" or current_row[current_column+9].lower() == "sconosciuto": stuff_to_do_check[4] = 1
 
-                            if "sì" in current_row[current_column+3+track_interval].lower():
-                                if "chadsoft" in current_row[current_column-1+track_interval].lower() or current_row[current_column-1+track_interval] == "": current_row[current_column-1+track_interval] = stuff_to_do_check[5] = 1
-                                if str(current_row[current_column+1+track_interval]).lower() == "sconosciuto" or str(current_row[current_column+1+track_interval]).lower(): stuff_to_do_check[6] = 1
-                                if current_row[current_column+7+track_interval] == "" or current_row[current_column+7+track_interval].lower() == "sconosciuto": stuff_to_do_check[7] = 1
-                                if current_row[current_column+8+track_interval] == "" or current_row[current_column+8+track_interval].lower() == "sconosciuto": stuff_to_do_check[8] = 1
-                                if current_row[current_column+9+track_interval] == "" or current_row[current_column+9+track_interval].lower() == "sconosciuto": stuff_to_do_check[9] = 1
-
-                            if stuff_to_do_check != [0,0,0,0,0,0,0,0,0,0]:
-                                if "chadsoft" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg("/rkgd/"+current_row[current_column+3].split("\"")[1].split("/rkgd/")[1][:-4]+"rkg")
-                                elif "discord" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="discord",link=current_row[current_column+3].split("\"")[1])
-                                elif "maschell" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="maschell",link=current_row[current_column+3].split("\"")[1])
-                                else: pass
-                                
-                                if "chadsoft" in current_row[current_column+3+track_interval].lower(): rkg_sc = cd.get_ghost_rkg("/rkgd/"+current_row[current_column+3+track_interval].split("\"")[1].split("/rkgd/")[1][:-4]+"rkg")
-                                elif "discord" in current_row[current_column+3+track_interval].lower(): rkg_sc = cd.get_ghost_rkg_from_other_site(site_name="discord",link=current_row[current_column+3+track_interval].split("\"")[1])
-                                elif "maschell" in current_row[current_column+3+track_interval].lower(): rkg_sc = cd.get_ghost_rkg_from_other_site(site_name="maschell",link=current_row[current_column+3+track_interval].split("\"")[1])
-                                else: pass
-
-                                if stuff_to_do_check[0] == 1: current_row[current_column-1] = m2s.genRender(rkg)
-                                if stuff_to_do_check[1] == 1: current_row[current_column+1] = cd.get_date_from_rkg(rkg)
-                                if stuff_to_do_check[2] == 1: current_row[current_column+7] = cd.get_driver(cd.get_driver_id_bin(rkg))
-                                if stuff_to_do_check[3] == 1: current_row[current_column+8] = cd.get_vehicle(cd.get_vehicle_id_bin(rkg))
-                                if stuff_to_do_check[4] == 1: current_row[current_column+9] = cd.get_controller(cd.get_controller_id_bin(rkg))
-                                if stuff_to_do_check[5] == 1: current_row[current_column-1+track_interval] = m2s.genRender(rkg_sc)
-                                if stuff_to_do_check[6] == 1: current_row[current_column+1+track_interval] = cd.get_date_from_rkg(rkg_sc)
-                                if stuff_to_do_check[7] == 1: current_row[current_column+7+track_interval] = cd.get_driver(cd.get_driver_id_bin(rkg_sc))
-                                if stuff_to_do_check[8] == 1: current_row[current_column+8+track_interval] = cd.get_vehicle(cd.get_vehicle_id_bin(rkg_sc))
-                                if stuff_to_do_check[9] == 1: current_row[current_column+9+track_interval] = cd.get_controller(cd.get_controller_id_bin(rkg_sc))
+                            input_time_arr = [current_row[current_column-1],current_row[current_column+1],current_row[current_column+7],current_row[current_column+8],current_row[current_column+9],current_row[current_column-1+track_interval],current_row[current_column+1+track_interval],current_row[current_column+7+track_interval],current_row[current_column+8+track_interval],current_row[current_column+9+track_interval]]
+                            link_arr = [current_row[current_column+3],current_row[current_column+3+track_interval]]
+                            output_time_arr = self.info_fill(time_arr=input_time_arr,link_arr=link_arr)
+                            if output_time_arr == input_time_arr or output_time_arr == "": pass
+                            else:
+                                current_row[current_column-1] = output_time_arr[0]
+                                current_row[current_column+1] = output_time_arr[1]
+                                current_row[current_column+7] = output_time_arr[2]
+                                current_row[current_column+8] = output_time_arr[3]
+                                current_row[current_column+9] = output_time_arr[4]
+                                current_row[current_column-1+track_interval] = output_time_arr[5]
+                                current_row[current_column+1+track_interval] = output_time_arr[6]
+                                current_row[current_column+7+track_interval] = output_time_arr[7]
+                                current_row[current_column+8+track_interval] = output_time_arr[8]
+                                current_row[current_column+9+track_interval] = output_time_arr[9]
 
                     # If the player doesn't have a time, set the completion flag to False.
                     # If the player does have a time and it's faster than the SC (or there's no SC in general), copy the time over the SC.
@@ -579,7 +561,6 @@ class Updater(QThread):
                 
                 elif length_track == 3:
                     for i in range(2):
-                        stuff_to_do_check = [0,0,0,0,0,0,0,0,0,0]
                         current_3lap_time = current_row[current_column]
                         current_flap_time = current_row[current_column+2]
                         sc_3lap_time = current_row[current_column+track_interval]
@@ -587,74 +568,53 @@ class Updater(QThread):
                         if current_3lap_time == "" and sc_3lap_time == "": complete_3lap_norm, complete_3lap_unr = False, False
                         elif current_3lap_time == "" and sc_3lap_time != "":
                             complete_3lap_norm = False
-                            if "sì" in current_row[current_column+3+track_interval].lower():
-                                if "chadsoft" in current_row[current_column-1+track_interval].lower() or current_row[current_column-1+track_interval] == "": current_row[current_column-1+track_interval] = stuff_to_do_check[5] = 1
-                                if str(current_row[current_column+1+track_interval]).lower() == "sconosciuto" or str(current_row[current_column+1+track_interval]).lower(): stuff_to_do_check[6] = 1
-                                if current_row[current_column+7+track_interval] == "" or current_row[current_column+7+track_interval].lower() == "sconosciuto": stuff_to_do_check[7] = 1
-                                if current_row[current_column+8+track_interval] == "" or current_row[current_column+8+track_interval].lower() == "sconosciuto": stuff_to_do_check[8] = 1
-                                if current_row[current_column+9+track_interval] == "" or current_row[current_column+9+track_interval].lower() == "sconosciuto": stuff_to_do_check[9] = 1
 
-                            if stuff_to_do_check != [0,0,0,0,0,0,0,0,0,0]:
-                                if "chadsoft" in current_row[current_column+3+track_interval].lower(): rkg = cd.get_ghost_rkg("/rkgd/"+current_row[current_column+3+track_interval].split("\"")[1].split("/rkgd/")[1][:-4]+"rkg")
-                                elif "discord" in current_row[current_column+3+track_interval].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="discord",link=current_row[current_column+3+track_interval].split("\"")[1])
-                                elif "maschell" in current_row[current_column+3+track_interval].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="maschell",link=current_row[current_column+3+track_interval].split("\"")[1])
-                                else: pass
-
-                                if stuff_to_do_check[5] == 1: current_row[current_column-1+track_interval] = m2s.genRender(rkg)
-                                if stuff_to_do_check[6] == 1: current_row[current_column+1+track_interval] = cd.get_date_from_rkg(rkg)
-                                if stuff_to_do_check[7] == 1: current_row[current_column+7+track_interval] = cd.get_driver(cd.get_driver_id_bin(rkg))
-                                if stuff_to_do_check[8] == 1: current_row[current_column+8+track_interval] = cd.get_vehicle(cd.get_vehicle_id_bin(rkg))
-                                if stuff_to_do_check[9] == 1: current_row[current_column+9+track_interval] = cd.get_controller(cd.get_controller_id_bin(rkg))
-
+                            input_time_arr = [current_row[current_column-1+track_interval],current_row[current_column+1+track_interval],current_row[current_column+7+track_interval],current_row[current_column+8+track_interval],current_row[current_column+9+track_interval]]
+                            link_arr = [current_row[current_column+3+track_interval]]
+                            output_time_arr = self.info_fill(time_arr=input_time_arr,link_arr=link_arr)
+                            if output_time_arr == input_time_arr or output_time_arr == "": pass
+                            else:
+                                current_row[current_column-1+track_interval] = output_time_arr[0]
+                                current_row[current_column+1+track_interval] = output_time_arr[1]
+                                current_row[current_column+7+track_interval] = output_time_arr[2]
+                                current_row[current_column+8+track_interval] = output_time_arr[3]
+                                current_row[current_column+9+track_interval] = output_time_arr[4]
+                            
                         elif current_3lap_time != "" and sc_3lap_time == "":
-                            if "sì" in current_row[current_column+3].lower():
-                                if "chadsoft" in current_row[current_column-1].lower() or current_row[current_column-1] == "": current_row[current_column-1] = stuff_to_do_check[0] = 1
-                                if str(current_row[current_column+1]).lower() == "sconosciuto" or str(current_row[current_column+1]).lower() == "": stuff_to_do_check[1] = 1
-                                if current_row[current_column+7] == "" or current_row[current_column+7].lower() == "sconosciuto": stuff_to_do_check[2] = 1
-                                if current_row[current_column+8] == "" or current_row[current_column+8].lower() == "sconosciuto": stuff_to_do_check[3] = 1
-                                if current_row[current_column+9] == "" or current_row[current_column+9].lower() == "sconosciuto": stuff_to_do_check[4] = 1
+                            
+                            input_time_arr = [current_row[current_column-1],current_row[current_column+1],current_row[current_column+7],current_row[current_column+8],current_row[current_column+9]]
+                            link_arr = [current_row[current_column+3]]
+                            output_time_arr = self.info_fill(time_arr=input_time_arr,link_arr=link_arr)
+                            if output_time_arr == input_time_arr or output_time_arr == "": pass
+                            else:
+                                current_row[current_column-1] = output_time_arr[0]
+                                current_row[current_column+1] = output_time_arr[1]
+                                current_row[current_column+7] = output_time_arr[2]
+                                current_row[current_column+8] = output_time_arr[3]
+                                current_row[current_column+9] = output_time_arr[4]
 
-                            if stuff_to_do_check != [0,0,0,0,0,0,0,0,0,0]:
-                                if "chadsoft" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg("/rkgd/"+current_row[current_column+3].split("\"")[1].split("/rkgd/")[1][:-4]+"rkg")
-                                elif "discord" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="discord",link=current_row[current_column+3].split("\"")[1])
-                                elif "maschell" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="maschell",link=current_row[current_column+3].split("\"")[1])
-                                else: pass
-
-                                if stuff_to_do_check[0] == 1: current_row[current_column-1] = m2s.genRender(rkg)
-                                if stuff_to_do_check[1] == 1: current_row[current_column+1] = cd.get_date_from_rkg(rkg)
-                                if stuff_to_do_check[2] == 1: current_row[current_column+7] = cd.get_driver(cd.get_driver_id_bin(rkg))
-                                if stuff_to_do_check[3] == 1: current_row[current_column+8] = cd.get_vehicle(cd.get_vehicle_id_bin(rkg))
-                                if stuff_to_do_check[4] == 1: current_row[current_column+9] = cd.get_controller(cd.get_controller_id_bin(rkg))
-
-                            current_row[current_column-1] = current_row[current_column-1]
-                            current_row[current_column]   = current_row[current_column]
-                            current_row[current_column+1] = current_row[current_column+1]
-                            current_row[current_column+3] = current_row[current_column+3]
-                            current_row[current_column+5] = current_row[current_column+5]
-                            current_row[current_column+7] = current_row[current_column+7]
-                            current_row[current_column+8] = current_row[current_column+8]
-                            current_row[current_column+9] = current_row[current_column+9]
+                            current_row[current_column-1+track_interval] = current_row[current_column-1]
+                            current_row[current_column+track_interval]   = current_row[current_column]
+                            current_row[current_column+1+track_interval] = current_row[current_column+1]
+                            current_row[current_column+3+track_interval] = current_row[current_column+3]
+                            current_row[current_column+5+track_interval] = current_row[current_column+5]
+                            current_row[current_column+7+track_interval] = current_row[current_column+7]
+                            current_row[current_column+8+track_interval] = current_row[current_column+8]
+                            current_row[current_column+9+track_interval] = current_row[current_column+9]
                             
                         elif current_3lap_time != "" and sc_3lap_time != "":
                             if gs.get_timedelta_from_timestring(current_3lap_time) < gs.get_timedelta_from_timestring(sc_3lap_time):
-                                if "sì" in current_row[current_column+3].lower():
-                                    if "chadsoft" in current_row[current_column-1].lower() or current_row[current_column-1] == "": current_row[current_column-1] = stuff_to_do_check[0] = 1
-                                    if str(current_row[current_column+1]).lower() == "sconosciuto" or str(current_row[current_column+1]).lower() == "": stuff_to_do_check[1] = 1
-                                    if current_row[current_column+7] == "": stuff_to_do_check[2] = 1
-                                    if current_row[current_column+8] == "": stuff_to_do_check[3] = 1
-                                    if current_row[current_column+9] == "": stuff_to_do_check[4] = 1
-
-                                if stuff_to_do_check != [0,0,0,0,0,0,0,0,0,0]:
-                                    if "chadsoft" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg("/rkgd/"+current_row[current_column+3].split("\"")[1].split("/rkgd/")[1][:-4]+"rkg")
-                                    elif "discord" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="discord",link=current_row[current_column+3].split("\"")[1])
-                                    elif "maschell" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="maschell",link=current_row[current_column+3].split("\"")[1])
-                                    else: pass
-
-                                    if stuff_to_do_check[0] == 1: current_row[current_column-1] = m2s.genRender(rkg)
-                                    if stuff_to_do_check[1] == 1: current_row[current_column+1] = cd.get_date_from_rkg(rkg)
-                                    if stuff_to_do_check[2] == 1: current_row[current_column+7] = cd.get_driver(cd.get_driver_id_bin(rkg))
-                                    if stuff_to_do_check[3] == 1: current_row[current_column+8] = cd.get_vehicle(cd.get_vehicle_id_bin(rkg))
-                                    if stuff_to_do_check[4] == 1: current_row[current_column+9] = cd.get_controller(cd.get_controller_id_bin(rkg))
+                                
+                                input_time_arr = [current_row[current_column-1],current_row[current_column+1],current_row[current_column+7],current_row[current_column+8],current_row[current_column+9]]
+                                link_arr = [current_row[current_column+3]]
+                                output_time_arr = self.info_fill(time_arr=input_time_arr,link_arr=link_arr)
+                                if output_time_arr == input_time_arr or output_time_arr == "": pass
+                                else:
+                                    current_row[current_column-1] = output_time_arr[0]
+                                    current_row[current_column+1] = output_time_arr[1]
+                                    current_row[current_column+7] = output_time_arr[2]
+                                    current_row[current_column+8] = output_time_arr[3]
+                                    current_row[current_column+9] = output_time_arr[4]
                                     
                                 current_row[current_column-1+track_interval] = current_row[current_column-1]
                                 current_row[current_column+track_interval]   = current_row[current_column]
@@ -664,25 +624,19 @@ class Updater(QThread):
                                 current_row[current_column+7+track_interval] = current_row[current_column+7]
                                 current_row[current_column+8+track_interval] = current_row[current_column+8]
                                 current_row[current_column+9+track_interval] = current_row[current_column+9]
+
                             elif gs.get_timedelta_from_timestring(current_3lap_time) == gs.get_timedelta_from_timestring(sc_3lap_time):
-                                if "sì" in current_row[current_column+3].lower():
-                                    if "chadsoft" in current_row[current_column-1].lower() or current_row[current_column-1] == "": current_row[current_column-1] = stuff_to_do_check[0] = 1
-                                    if str(current_row[current_column+1]).lower() == "sconosciuto" or str(current_row[current_column+1]).lower() == "": stuff_to_do_check[1] = 1
-                                    if current_row[current_column+7] == "" or current_row[current_column+7].lower() == "sconosciuto": stuff_to_do_check[2] = 1
-                                    if current_row[current_column+8] == "" or current_row[current_column+8].lower() == "sconosciuto": stuff_to_do_check[3] = 1
-                                    if current_row[current_column+9] == "" or current_row[current_column+9].lower() == "sconosciuto": stuff_to_do_check[4] = 1
-
-                                if stuff_to_do_check != [0,0,0,0,0,0,0,0,0,0]:
-                                    if "chadsoft" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg("/rkgd/"+current_row[current_column+3].split("\"")[1].split("/rkgd/")[1][:-4]+"rkg")
-                                    elif "discord" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="discord",link=current_row[current_column+3].split("\"")[1])
-                                    elif "maschell" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="maschell",link=current_row[current_column+3].split("\"")[1])
-                                    else: pass
-
-                                    if stuff_to_do_check[0] == 1: current_row[current_column-1] = m2s.genRender(rkg)
-                                    if stuff_to_do_check[1] == 1: current_row[current_column+1] = cd.get_date_from_rkg(rkg)
-                                    if stuff_to_do_check[2] == 1: current_row[current_column+7] = cd.get_driver(cd.get_driver_id_bin(rkg))
-                                    if stuff_to_do_check[3] == 1: current_row[current_column+8] = cd.get_vehicle(cd.get_vehicle_id_bin(rkg))
-                                    if stuff_to_do_check[4] == 1: current_row[current_column+9] = cd.get_controller(cd.get_controller_id_bin(rkg))
+                                
+                                input_time_arr = [current_row[current_column-1],current_row[current_column+1],current_row[current_column+7],current_row[current_column+8],current_row[current_column+9]]
+                                link_arr = [current_row[current_column+3]]
+                                output_time_arr = self.info_fill(time_arr=input_time_arr,link_arr=link_arr)
+                                if output_time_arr == input_time_arr or output_time_arr == "": pass
+                                else:
+                                    current_row[current_column-1] = output_time_arr[0]
+                                    current_row[current_column+1] = output_time_arr[1]
+                                    current_row[current_column+7] = output_time_arr[2]
+                                    current_row[current_column+8] = output_time_arr[3]
+                                    current_row[current_column+9] = output_time_arr[4]
                                     
                                 current_row[current_column-1+track_interval] = current_row[current_column-1]
                                 current_row[current_column+track_interval]   = current_row[current_column]
@@ -696,41 +650,22 @@ class Updater(QThread):
                                 elif current_row[current_column+5+track_interval] == "" : current_row[current_column+5+track_interval] = current_row[current_column+5]
 
                             else:
-                                if "sì" in current_row[current_column+3].lower():
-                                    if "chadsoft" in current_row[current_column-1].lower() or current_row[current_column-1] == "": current_row[current_column-1] = stuff_to_do_check[0] = 1
-                                    if str(current_row[current_column+1]).lower() == "sconosciuto" or str(current_row[current_column+1]).lower() == "": stuff_to_do_check[1] = 1
-                                    if current_row[current_column+7] == "": stuff_to_do_check[2] = 1
-                                    if current_row[current_column+8] == "": stuff_to_do_check[3] = 1
-                                    if current_row[current_column+9] == "": stuff_to_do_check[4] = 1
 
-                                if "sì" in current_row[current_column+3+track_interval].lower():
-                                    if "chadsoft" in current_row[current_column-1+track_interval].lower() or current_row[current_column-1+track_interval] == "": current_row[current_column-1+track_interval] = stuff_to_do_check[5] = 1
-                                    if str(current_row[current_column+1+track_interval]).lower() == "sconosciuto" or str(current_row[current_column+1+track_interval]).lower(): stuff_to_do_check[6] = 1
-                                    if current_row[current_column+7+track_interval] == "": stuff_to_do_check[7] = 1
-                                    if current_row[current_column+8+track_interval] == "": stuff_to_do_check[8] = 1
-                                    if current_row[current_column+9+track_interval] == "": stuff_to_do_check[9] = 1
-
-                                if stuff_to_do_check != [0,0,0,0,0,0,0,0,0,0]:
-                                    if "chadsoft" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg("/rkgd/"+current_row[current_column+3].split("\"")[1].split("/rkgd/")[1][:-4]+"rkg")
-                                    elif "discord" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="discord",link=current_row[current_column+3].split("\"")[1])
-                                    elif "maschell" in current_row[current_column+3].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="maschell",link=current_row[current_column+3].split("\"")[1])
-                                    else: pass
-                                    
-                                    if "chadsoft" in current_row[current_column+3+track_interval].lower(): rkg_sc = cd.get_ghost_rkg("/rkgd/"+current_row[current_column+3+track_interval].split("\"")[1].split("/rkgd/")[1][:-4]+"rkg")
-                                    elif "discord" in current_row[current_column+3+track_interval].lower(): rkg_sc = cd.get_ghost_rkg_from_other_site(site_name="discord",link=current_row[current_column+3+track_interval].split("\"")[1])
-                                    elif "maschell" in current_row[current_column+3+track_interval].lower(): rkg_sc = cd.get_ghost_rkg_from_other_site(site_name="maschell",link=current_row[current_column+3+track_interval].split("\"")[1])
-                                    else: pass
-
-                                    if stuff_to_do_check[0] == 1: current_row[current_column-1] = m2s.genRender(rkg)
-                                    if stuff_to_do_check[1] == 1: current_row[current_column+1] = cd.get_date_from_rkg(rkg)
-                                    if stuff_to_do_check[2] == 1: current_row[current_column+7] = cd.get_driver(cd.get_driver_id_bin(rkg))
-                                    if stuff_to_do_check[3] == 1: current_row[current_column+8] = cd.get_vehicle(cd.get_vehicle_id_bin(rkg))
-                                    if stuff_to_do_check[4] == 1: current_row[current_column+9] = cd.get_controller(cd.get_controller_id_bin(rkg))
-                                    if stuff_to_do_check[5] == 1: current_row[current_column-1+track_interval] = m2s.genRender(rkg_sc)
-                                    if stuff_to_do_check[6] == 1: current_row[current_column+1+track_interval] = cd.get_date_from_rkg(rkg_sc)
-                                    if stuff_to_do_check[7] == 1: current_row[current_column+7+track_interval] = cd.get_driver(cd.get_driver_id_bin(rkg_sc))
-                                    if stuff_to_do_check[8] == 1: current_row[current_column+8+track_interval] = cd.get_vehicle(cd.get_vehicle_id_bin(rkg_sc))
-                                    if stuff_to_do_check[9] == 1: current_row[current_column+9+track_interval] = cd.get_controller(cd.get_controller_id_bin(rkg_sc))
+                                input_time_arr = [current_row[current_column-1],current_row[current_column+1],current_row[current_column+7],current_row[current_column+8],current_row[current_column+9],current_row[current_column-1+track_interval],current_row[current_column+1+track_interval],current_row[current_column+7+track_interval],current_row[current_column+8+track_interval],current_row[current_column+9+track_interval]]
+                                link_arr = [current_row[current_column+3],current_row[current_column+3+track_interval]]
+                                output_time_arr = self.info_fill(time_arr=input_time_arr,link_arr=link_arr)
+                                if output_time_arr == input_time_arr or output_time_arr == "": pass
+                                else:
+                                    current_row[current_column-1] = output_time_arr[0]
+                                    current_row[current_column+1] = output_time_arr[1]
+                                    current_row[current_column+7] = output_time_arr[2]
+                                    current_row[current_column+8] = output_time_arr[3]
+                                    current_row[current_column+9] = output_time_arr[4]
+                                    current_row[current_column-1+track_interval] = output_time_arr[5]
+                                    current_row[current_column+1+track_interval] = output_time_arr[6]
+                                    current_row[current_column+7+track_interval] = output_time_arr[7]
+                                    current_row[current_column+8+track_interval] = output_time_arr[8]
+                                    current_row[current_column+9+track_interval] = output_time_arr[9]
 
                         # If the player doesn't have a time, set the completion flag to False.
                         # If the player does have a time and it's faster than the SC (or there's no SC in general), copy the time over the SC.
