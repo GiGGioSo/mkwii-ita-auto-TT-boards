@@ -1,4 +1,5 @@
 from array import array
+from asyncio.windows_events import NULL
 import json
 import datetime
 from operator import index
@@ -338,7 +339,7 @@ class Updater(QThread):
             f.write(log_out)
         self.display_msg.emit("\n[3LAPs UPDATE FINISHED]")
 
-    def info_fill(time_arr:array,links_arr:array):
+    def info_fill(self, time_arr:array,links_arr:array):
         stuff_to_do_check = [0,0,0,0,0,0,0,0,0,0]
         if "chadsoft" in time_arr[0].lower() or time_arr[0] == "": stuff_to_do_check[0] = 1
         if str(time_arr[1]).lower() == "sconosciuto" or str(time_arr[1]).lower() == "": stuff_to_do_check[1] = 1
@@ -354,25 +355,29 @@ class Updater(QThread):
 
         if stuff_to_do_check != [0,0,0,0,0,0,0,0,0,0]:
             if "chadsoft" in links_arr[0].lower(): rkg = cd.get_ghost_rkg("/rkgd/"+links_arr[0].split("\"")[1].split("/rkgd/")[1][:-4]+"rkg")
-            elif "discord" in links_arr[0].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="discord",link=links_arr[0].split("\"")[1])
+            elif "discord" in links_arr[0].lower() and "sì" in links_arr[0].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="discord",link=links_arr[0].split("\"")[1])
             elif "maschell" in links_arr[0].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="maschell",link=links_arr[0].split("\"")[1])
-            else: pass
+            else: rkg = None
             
-            if "chadsoft" in links_arr[1].lower(): rkg_sc = cd.get_ghost_rkg("/rkgd/"+links_arr[1].split("\"")[1].split("/rkgd/")[1][:-4]+"rkg")
-            elif "discord" in links_arr[1].lower(): rkg_sc = cd.get_ghost_rkg_from_other_site(site_name="discord",link=links_arr[1].split("\"")[1])
-            elif "maschell" in links_arr[1].lower(): rkg_sc = cd.get_ghost_rkg_from_other_site(site_name="maschell",link=links_arr[1].split("\"")[1])
-            else: pass
+            if rkg != None:
+                if stuff_to_do_check[0] == 1: time_arr[0] = m2s.genRender(rkg)
+                if stuff_to_do_check[1] == 1: time_arr[1] = cd.get_date_from_rkg(rkg)
+                if stuff_to_do_check[2] == 1: time_arr[2] = cd.get_driver(cd.get_driver_id_bin(rkg))
+                if stuff_to_do_check[3] == 1: time_arr[3] = cd.get_vehicle(cd.get_vehicle_id_bin(rkg))
+                if stuff_to_do_check[4] == 1: time_arr[4] = cd.get_controller(cd.get_controller_id_bin(rkg))
+            
+            if len(time_arr) > 5:
+                if "chadsoft" in links_arr[1].lower(): rkg_sc = cd.get_ghost_rkg("/rkgd/"+links_arr[1].split("\"")[1].split("/rkgd/")[1][:-4]+"rkg")
+                elif "discord" in links_arr[1].lower() and "sì" in links_arr[1].lower(): rkg_sc = cd.get_ghost_rkg_from_other_site(site_name="discord",link=links_arr[1].split("\"")[1])
+                elif "maschell" in links_arr[1].lower(): rkg_sc = cd.get_ghost_rkg_from_other_site(site_name="maschell",link=links_arr[1].split("\"")[1])
+                else: rkg_sc = None
 
-            if stuff_to_do_check[0] == 1: time_arr[0] = m2s.genRender(rkg)
-            if stuff_to_do_check[1] == 1: time_arr[1] = cd.get_date_from_rkg(rkg)
-            if stuff_to_do_check[2] == 1: time_arr[2] = cd.get_driver(cd.get_driver_id_bin(rkg))
-            if stuff_to_do_check[3] == 1: time_arr[3] = cd.get_vehicle(cd.get_vehicle_id_bin(rkg))
-            if stuff_to_do_check[4] == 1: time_arr[4] = cd.get_controller(cd.get_controller_id_bin(rkg))
-            if stuff_to_do_check[5] == 1: time_arr[5] = m2s.genRender(rkg_sc)
-            if stuff_to_do_check[6] == 1: time_arr[6] = cd.get_date_from_rkg(rkg_sc)
-            if stuff_to_do_check[7] == 1: time_arr[7] = cd.get_driver(cd.get_driver_id_bin(rkg_sc))
-            if stuff_to_do_check[8] == 1: time_arr[8] = cd.get_vehicle(cd.get_vehicle_id_bin(rkg_sc))
-            if stuff_to_do_check[9] == 1: time_arr[9] = cd.get_controller(cd.get_controller_id_bin(rkg_sc))
+                if rkg_sc != None:
+                    if stuff_to_do_check[5] == 1: time_arr[5] = m2s.genRender(rkg_sc)
+                    if stuff_to_do_check[6] == 1: time_arr[6] = cd.get_date_from_rkg(rkg_sc)
+                    if stuff_to_do_check[7] == 1: time_arr[7] = cd.get_driver(cd.get_driver_id_bin(rkg_sc))
+                    if stuff_to_do_check[8] == 1: time_arr[8] = cd.get_vehicle(cd.get_vehicle_id_bin(rkg_sc))
+                    if stuff_to_do_check[9] == 1: time_arr[9] = cd.get_controller(cd.get_controller_id_bin(rkg_sc))
 
         return time_arr
 
@@ -392,6 +397,7 @@ class Updater(QThread):
         for name in names:
             if "*" in name:
                 continue
+            self.display_msg.emit(f"Checking {name}")
             if self.isInterruptionRequested():
                 self.stopped.emit()
                 return -1
@@ -419,7 +425,7 @@ class Updater(QThread):
                     elif current_3lap_time != "" and "sì" in current_row[current_column+3].lower():
                         input_time_arr = [current_row[current_column-1],current_row[current_column+1],current_row[current_column+7],current_row[current_column+8],current_row[current_column+9]]
                         link_arr = [current_row[current_column+3]]
-                        output_time_arr = self.info_fill(time_arr=input_time_arr,link_arr=link_arr)
+                        output_time_arr = self.info_fill(time_arr=input_time_arr,links_arr=link_arr)
                         if output_time_arr == input_time_arr or output_time_arr == "": pass
                         else:
                             current_row[current_column-1] = output_time_arr[0]
@@ -442,7 +448,7 @@ class Updater(QThread):
 
                         input_time_arr = [current_row[current_column-1+track_interval],current_row[current_column+1+track_interval],current_row[current_column+7+track_interval],current_row[current_column+8+track_interval],current_row[current_column+9+track_interval]]
                         link_arr = [current_row[current_column+3+track_interval]]
-                        output_time_arr = self.info_fill(time_arr=input_time_arr,link_arr=link_arr)
+                        output_time_arr = self.info_fill(time_arr=input_time_arr,links_arr=link_arr)
                         if output_time_arr == input_time_arr or output_time_arr == "": pass
                         else:
                             current_row[current_column-1+track_interval] = output_time_arr[0]
@@ -455,7 +461,7 @@ class Updater(QThread):
                         
                         input_time_arr = [current_row[current_column-1],current_row[current_column+1],current_row[current_column+7],current_row[current_column+8],current_row[current_column+9]]
                         link_arr = [current_row[current_column+3]]
-                        output_time_arr = self.info_fill(time_arr=input_time_arr,link_arr=link_arr)
+                        output_time_arr = self.info_fill(time_arr=input_time_arr,links_arr=link_arr)
                         if output_time_arr == input_time_arr or output_time_arr == "": pass
                         else:
                             current_row[current_column-1] = output_time_arr[0]
@@ -478,7 +484,7 @@ class Updater(QThread):
                             
                             input_time_arr = [current_row[current_column-1],current_row[current_column+1],current_row[current_column+7],current_row[current_column+8],current_row[current_column+9]]
                             link_arr = [current_row[current_column+3]]
-                            output_time_arr = self.info_fill(time_arr=input_time_arr,link_arr=link_arr)
+                            output_time_arr = self.info_fill(time_arr=input_time_arr,links_arr=link_arr)
                             if output_time_arr == input_time_arr or output_time_arr == "": pass
                             else:
                                 current_row[current_column-1] = output_time_arr[0]
@@ -500,7 +506,7 @@ class Updater(QThread):
                             
                             input_time_arr = [current_row[current_column-1],current_row[current_column+1],current_row[current_column+7],current_row[current_column+8],current_row[current_column+9]]
                             link_arr = [current_row[current_column+3]]
-                            output_time_arr = self.info_fill(time_arr=input_time_arr,link_arr=link_arr)
+                            output_time_arr = self.info_fill(time_arr=input_time_arr,links_arr=link_arr)
                             if output_time_arr == input_time_arr or output_time_arr == "": pass
                             else:
                                 current_row[current_column-1] = output_time_arr[0]
@@ -524,7 +530,7 @@ class Updater(QThread):
 
                             input_time_arr = [current_row[current_column-1],current_row[current_column+1],current_row[current_column+7],current_row[current_column+8],current_row[current_column+9],current_row[current_column-1+track_interval],current_row[current_column+1+track_interval],current_row[current_column+7+track_interval],current_row[current_column+8+track_interval],current_row[current_column+9+track_interval]]
                             link_arr = [current_row[current_column+3],current_row[current_column+3+track_interval]]
-                            output_time_arr = self.info_fill(time_arr=input_time_arr,link_arr=link_arr)
+                            output_time_arr = self.info_fill(time_arr=input_time_arr,links_arr=link_arr)
                             if output_time_arr == input_time_arr or output_time_arr == "": pass
                             else:
                                 current_row[current_column-1] = output_time_arr[0]
@@ -571,7 +577,7 @@ class Updater(QThread):
 
                             input_time_arr = [current_row[current_column-1+track_interval],current_row[current_column+1+track_interval],current_row[current_column+7+track_interval],current_row[current_column+8+track_interval],current_row[current_column+9+track_interval]]
                             link_arr = [current_row[current_column+3+track_interval]]
-                            output_time_arr = self.info_fill(time_arr=input_time_arr,link_arr=link_arr)
+                            output_time_arr = self.info_fill(time_arr=input_time_arr,links_arr=link_arr)
                             if output_time_arr == input_time_arr or output_time_arr == "": pass
                             else:
                                 current_row[current_column-1+track_interval] = output_time_arr[0]
@@ -584,7 +590,7 @@ class Updater(QThread):
                             
                             input_time_arr = [current_row[current_column-1],current_row[current_column+1],current_row[current_column+7],current_row[current_column+8],current_row[current_column+9]]
                             link_arr = [current_row[current_column+3]]
-                            output_time_arr = self.info_fill(time_arr=input_time_arr,link_arr=link_arr)
+                            output_time_arr = self.info_fill(time_arr=input_time_arr,links_arr=link_arr)
                             if output_time_arr == input_time_arr or output_time_arr == "": pass
                             else:
                                 current_row[current_column-1] = output_time_arr[0]
@@ -607,7 +613,7 @@ class Updater(QThread):
                                 
                                 input_time_arr = [current_row[current_column-1],current_row[current_column+1],current_row[current_column+7],current_row[current_column+8],current_row[current_column+9]]
                                 link_arr = [current_row[current_column+3]]
-                                output_time_arr = self.info_fill(time_arr=input_time_arr,link_arr=link_arr)
+                                output_time_arr = self.info_fill(time_arr=input_time_arr,links_arr=link_arr)
                                 if output_time_arr == input_time_arr or output_time_arr == "": pass
                                 else:
                                     current_row[current_column-1] = output_time_arr[0]
@@ -629,7 +635,7 @@ class Updater(QThread):
                                 
                                 input_time_arr = [current_row[current_column-1],current_row[current_column+1],current_row[current_column+7],current_row[current_column+8],current_row[current_column+9]]
                                 link_arr = [current_row[current_column+3]]
-                                output_time_arr = self.info_fill(time_arr=input_time_arr,link_arr=link_arr)
+                                output_time_arr = self.info_fill(time_arr=input_time_arr,links_arr=link_arr)
                                 if output_time_arr == input_time_arr or output_time_arr == "": pass
                                 else:
                                     current_row[current_column-1] = output_time_arr[0]
@@ -653,7 +659,7 @@ class Updater(QThread):
 
                                 input_time_arr = [current_row[current_column-1],current_row[current_column+1],current_row[current_column+7],current_row[current_column+8],current_row[current_column+9],current_row[current_column-1+track_interval],current_row[current_column+1+track_interval],current_row[current_column+7+track_interval],current_row[current_column+8+track_interval],current_row[current_column+9+track_interval]]
                                 link_arr = [current_row[current_column+3],current_row[current_column+3+track_interval]]
-                                output_time_arr = self.info_fill(time_arr=input_time_arr,link_arr=link_arr)
+                                output_time_arr = self.info_fill(time_arr=input_time_arr,links_arr=link_arr)
                                 if output_time_arr == input_time_arr or output_time_arr == "": pass
                                 else:
                                     current_row[current_column-1] = output_time_arr[0]
