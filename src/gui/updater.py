@@ -356,7 +356,7 @@ class Updater(QThread):
         if stuff_to_do_check != [0,0,0,0,0,0,0,0,0,0]:
             if "chadsoft" in links_arr[0].lower(): rkg = cd.get_ghost_rkg("/rkgd/"+links_arr[0].split("\"")[1].split("/rkgd/")[1][:-4]+"rkg")
             elif "discord" in links_arr[0].lower() and "sì" in links_arr[0].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="discord",link=links_arr[0].split("\"")[1])
-            elif "maschell" in links_arr[0].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="maschell",link=links_arr[0].split("\"")[1])
+            elif "ninrankings" in links_arr[0].lower() or "maschell" in links_arr[0].lower(): rkg = cd.get_ghost_rkg_from_other_site(site_name="maschell",link=links_arr[0].split("\"")[1])
             else: rkg = None
             
             if rkg != None:
@@ -369,7 +369,7 @@ class Updater(QThread):
             if len(time_arr) > 5:
                 if "chadsoft" in links_arr[1].lower(): rkg_sc = cd.get_ghost_rkg("/rkgd/"+links_arr[1].split("\"")[1].split("/rkgd/")[1][:-4]+"rkg")
                 elif "discord" in links_arr[1].lower() and "sì" in links_arr[1].lower(): rkg_sc = cd.get_ghost_rkg_from_other_site(site_name="discord",link=links_arr[1].split("\"")[1])
-                elif "maschell" in links_arr[1].lower(): rkg_sc = cd.get_ghost_rkg_from_other_site(site_name="maschell",link=links_arr[1].split("\"")[1])
+                elif "ninrankings" in links_arr[1].lower() or "maschell" in links_arr[1].lower(): rkg_sc = cd.get_ghost_rkg_from_other_site(site_name="maschell",link=links_arr[1].split("\"")[1])
                 else: rkg_sc = None
 
                 if rkg_sc != None:
@@ -707,7 +707,7 @@ class Updater(QThread):
             if complete_flap_norm: self.display_msg.emit(f"[FLAP NORMAL]       is complete at row {row+1}")
             if complete_flap_unr:  self.display_msg.emit(f"[FLAP UNRESTRICTED] is complete at row {row+1}")
 
-            if row % 50 == 0: gs.set_all_values(wks, full_gs)
+            if row % 200 == 0: gs.set_all_values(wks, full_gs)
 
         self.display_msg.emit("[UPDATING...] Uploading data to Google Sheets")
         gs.set_all_values(wks, full_gs)

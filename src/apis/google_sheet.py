@@ -20,7 +20,8 @@ CATEGORY_IDS = {
     "Case_Normal" :                     ["00"],
     "Case_Normal_Shortcut" :            ["02","00"],
     "Case_Normal_Glitch" :              ["00","01"],
-    "Case_Normal_Shortcut_Glitch" :     ["02","00","01"]
+    "Case_Normal_Shortcut_Glitch" :     ["02","00","01"],
+    "Case_Normal_Glitch_ShortcutIgnore":["02","01"]
 }
 
 #   Categories are always ordered as No-SC > SC > Glitch
@@ -40,6 +41,8 @@ CATEGORY_IDS = {
 #   Normal ID   | 02
 #   Shortcut ID | 00
 #   Glitch ID   | 01
+#
+#   "Case_Normal_Glitch_ShortcutIgnore" is to ignore the SC on rBC
 #
 #   It makes no sense but we gotta deal with it.
 
