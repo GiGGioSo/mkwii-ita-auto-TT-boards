@@ -5,9 +5,3 @@ This program was made to automatize the updating process of the Time Trial leade
 
 ## What am I going to do?
 In the future I would like to implement a system to automatize the updating process of the Flaps (short for Fast laps).  Though, they're stored in a different way inside the chadsoft database, so it won't be immediate.  In the short term, I will improve the user interface, add log files and the ability to automatically save the ghosts it finds.
-
-## Donate
-I'm working on this project for free in my spare time, but consider a small donation if it was useful to you, to help me continue developing it.
-Thank you.
-
-[PayPal](https://www.paypal.com/donate/?hosted_button_id=U6TUEPB28ZH48)
